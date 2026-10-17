@@ -35,6 +35,26 @@ enum AssetCache {
         return thumb
     }
 
+    private static let menuThumbs = NSCache<NSNumber, NSImage>()
+
+    /// 18-point version of the stored thumbnail for menu rows, letterboxed into a square.
+    static func menuThumbnail(for item: ClipItem) -> NSImage? {
+        guard let full = thumbnail(for: item) else { return nil }
+        let key = NSNumber(value: item.id)
+        if let cached = menuThumbs.object(forKey: key) { return cached }
+        let side: CGFloat = 18
+        let scale = min(side / max(full.size.width, 1), side / max(full.size.height, 1))
+        let drawn = NSSize(width: full.size.width * scale, height: full.size.height * scale)
+        let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { _ in
+            let rect = NSRect(x: (side - drawn.width) / 2, y: (side - drawn.height) / 2, width: drawn.width, height: drawn.height)
+            NSBezierPath(roundedRect: rect, xRadius: 3, yRadius: 3).addClip()
+            full.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1)
+            return true
+        }
+        menuThumbs.setObject(image, forKey: key)
+        return image
+    }
+
     static func appName(for bundleID: String) -> String {
         if let cached = appNames[bundleID] { return cached }
         let name = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)

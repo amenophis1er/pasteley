@@ -23,7 +23,12 @@ struct ClipItem: Identifiable, Hashable, Sendable {
 
     var menuTitle: String {
         switch kind {
-        case .image: return "Image (\(ByteCountFormatter.string(fromByteCount: Int64(byteSize), countStyle: .file)))"
+        case .image:
+            // Recognized text tells screenshots apart; size alone does not.
+            if let line = ocrText?.split(whereSeparator: \.isNewline).first.map(String.init), !line.isBlank {
+                return line.count > 48 ? String(line.prefix(48)) + "…" : line
+            }
+            return "\(preview) · \(ByteCountFormatter.string(fromByteCount: Int64(byteSize), countStyle: .file))"
         case .file: return preview.split(separator: "\n").first.map(String.init) ?? preview
         default:
             let line = preview.split(whereSeparator: \.isNewline).first.map(String.init) ?? preview
