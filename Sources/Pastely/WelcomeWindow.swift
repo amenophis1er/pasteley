@@ -25,6 +25,8 @@ final class WelcomeWindow {
         w.standardWindowButton(.miniaturizeButton)?.isHidden = true
         w.standardWindowButton(.zoomButton)?.isHidden = true
         w.isReleasedWhenClosed = false
+        // Follow the user: granting Accessibility sends them to System Settings on another Space.
+        w.collectionBehavior = [.moveToActiveSpace]
         w.contentView = NSHostingView(rootView: WelcomeView { [weak self] in self?.close() })
         w.center()
         window = w
@@ -66,7 +68,14 @@ struct WelcomeView: View {
             }
         }
         .tint(Theme.accent)
-        .onReceive(poll) { _ in accessibility = Paster.isTrusted() }
+        .onReceive(poll) { _ in
+            let trusted = Paster.isTrusted()
+            if trusted && !accessibility {
+                // Permission just landed: come back in front of System Settings with the green state.
+                WelcomeWindow.shared.show()
+            }
+            accessibility = trusted
+        }
         .onChange(of: settings.hotkeyKeyCode) { _, _ in AppDelegate.shared.registerHotkey() }
         .onChange(of: settings.hotkeyModifiers) { _, _ in AppDelegate.shared.registerHotkey() }
     }
