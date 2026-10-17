@@ -1,0 +1,9 @@
+---
+name: Feature request
+about: An idea for Pasteley
+labels: enhancement
+---
+
+**The problem you're trying to solve**
+
+**How you imagine it working**
