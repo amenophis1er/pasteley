@@ -1,55 +1,87 @@
 # Pastely
 
-A small, local-only clipboard manager for macOS. Menu bar app, one hotkey, searchable history for text, rich text, images and files. Nothing leaves the Mac.
+**Everything you copy, one keystroke away.** A light, local-only clipboard manager for macOS.
+
+Website: [pastely.amenophis.dev](https://pastely.amenophis.dev) · Download: [latest release](https://github.com/amenophis1er/pastely/releases/latest)
+
+![The Pastely history panel](docs/history-panel.png)
+
+## What it does
+
+- Press **⇧⌘V** in any app. The panel opens next to your cursor. Type to search, Return to paste.
+- Keeps text, rich text, images and file references.
+- Reads the text inside screenshots on-device, so a search for "invoice" finds the picture. Shift+Return pastes the recognized text.
+- Filters for text, images, files and pinned items. Pins survive cleanup.
+- Updates itself through Sparkle from GitHub Releases.
+
+![Searching for a word found inside a screenshot](docs/history-search.png)
+
+## Privacy
+
+A clipboard manager sees everything you copy, so Pastely is built to keep it to itself. Details in [SECURITY.md](SECURITY.md).
+
+- History is encrypted on disk with AES-GCM. The key lives in your login keychain.
+- Copies flagged as concealed by password managers are never recorded. Any app can be added to the ignore list.
+- No analytics, no accounts, no sync. The only network request is the update check, which you can turn off.
+- History expires by count, by age, or with one click.
 
 ## Install
 
-Download the latest `Pastely-x.y.z.dmg` from [Releases](https://github.com/amenophis1er/pastely/releases/latest), open it and drag Pastely to Applications. The app is signed with a Developer ID and notarized by Apple.
+Download the DMG from [Releases](https://github.com/amenophis1er/pastely/releases/latest), open it and drag Pastely to Applications. The app is signed with a Developer ID and notarized by Apple. Requires macOS 15 or later on Apple silicon.
 
-## Run from source
+On first launch a welcome screen walks you through the shortcut, the Accessibility permission (needed to paste into the app you are in) and launch at login.
+
+## Keyboard
+
+| Key | Action |
+| --- | --- |
+| ⇧⌘V | Open or close the history (change it in Settings) |
+| Type | Fuzzy search, including text recognized in images |
+| ↑ ↓ | Move selection |
+| ↩ | Paste |
+| ⇧↩ | Paste as plain text, or the recognized text of an image |
+| ⌘1 … ⌘9 | Paste the nth visible item |
+| ⌘C | Copy without pasting |
+| ⌘P | Pin or unpin |
+| ⌘⌫ | Delete |
+| ⇥ | Cycle filters |
+| ⎋ | Close |
+
+URL scheme for launchers and scripts: `pastely://history`, `pastely://settings`, `pastely://pause`, `pastely://resume`, `pastely://welcome`.
+
+## Build from source
+
+Requires Xcode 27 on macOS 26. No third-party dependencies apart from Sparkle, pulled in by Swift Package Manager.
 
 ```sh
-swift build && .build/debug/Pastely     # dev run (no bundle, no Dock icon)
-./scripts/bundle.sh && open build.noindex/dev/Pastely.app  # dev bundle, Apple Development signed
-swift test
+swift build && swift test
+./scripts/bundle.sh && open build.noindex/dev/Pastely.app
 ```
 
-## Using it
-
-- **Cmd+Shift+V** opens the history panel (change it in Settings). Type to fuzzy-search, Tab cycles the filter, Return pastes, Shift+Return pastes plain text, Cmd+1…9 pastes the nth row, Cmd+P pins, Cmd+Backspace deletes.
-- **Menu bar icon** lists the 10 newest items, pause/resume capture, Settings.
-- **Settings** (Cmd+,): hotkey recorder, launch at login, Accessibility status, retention, image cap, ignored apps.
-- **URL scheme** for launchers and scripts: `open pastely://history`, `pastely://settings`, `pastely://pause`, `pastely://resume`.
-- **Updates** arrive through Sparkle from GitHub Releases. Check from the menu bar or turn automatic checks off in Settings.
-
-## Layout
+The dev bundle is `Pastely Dev` with bundle id `com.amenophis.pastely.dev`. It has its own preferences, Accessibility entry, keychain key, history folder and `pastely-dev://` scheme, so it runs beside the installed release without touching it, and it has no update feed.
 
 | Path | What |
 | --- | --- |
-| `Sources/Pastely/DesignSystem.swift` | Theme tokens and shared components |
-| `Sources/Pastely/HistoryPanel.swift` | Floating panel, filters, list, preview pane |
-| `Sources/Pastely/SettingsView.swift` | Settings tabs |
-| `Sources/Pastely/AppSettings.swift` | Persisted preferences |
-| `Sources/Pastely/ClipStore.swift` | SQLite + AES-GCM history |
 | `Sources/Pastely/PasteboardWatcher.swift` | Capture and privacy filters |
-| `scripts/make-icon.swift` | Regenerates `Resources/AppIcon.icns` |
+| `Sources/Pastely/ClipStore.swift` | SQLite history, encrypted payloads, retention |
+| `Sources/Pastely/HistoryPanel.swift` | Floating panel, filters, list, preview |
+| `Sources/Pastely/FocusLocator.swift` | Finds the caret to place the panel |
+| `Sources/Pastely/ImageTextRecognizer.swift` | On-device OCR through Vision |
+| `Sources/Pastely/SettingsView.swift`, `WelcomeWindow.swift` | Settings and first launch |
+| `Sources/Pastely/DesignSystem.swift` | Theme tokens and shared components |
+| `scripts/make-icon.swift` | Regenerates the app icon |
+| `Makefile` | `release`, `notarize`, `dmg`, `appcast`, `screenshots` |
 
-## Releasing
+## Release
 
-Tag a commit and push it. CI builds, signs, notarizes and publishes the DMG to GitHub Releases:
+Tag a commit and push it. CI builds, signs, notarizes, packages the DMG, signs it for Sparkle and publishes a GitHub Release with the appcast.
 
 ```sh
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
-Locally, `make dmg` does the same with your Developer ID certificate and the `pastely-notary` keychain profile.
+Locally, `make dmg` does the same with your Developer ID certificate and the `pastely-notary` keychain profile. Keychain access is remembered per code identity, which is why the bundle script signs with a stable identity rather than ad-hoc.
 
-Default hotkey: Cmd+Shift+V. Pasting into the front app needs Accessibility permission, which macOS prompts for on first paste.
+## License
 
-## Dev builds
-
-`./scripts/bundle.sh` produces `Pastely Dev` with bundle id `com.amenophis.pastely.dev`, its own preferences, Accessibility entry, keychain key, history folder and `pastely-dev://` scheme, so it runs beside the installed release without touching it. Dev builds have no update feed.
-
-## Signing note
-
-The encryption key lives in the login keychain, and the keychain remembers "Always Allow" per code identity. `scripts/bundle.sh` therefore signs with your Apple Development certificate by default so the identity stays stable across builds. Running the raw `.build/debug/Pastely` binary uses a different identity and will prompt. Override with `SIGN_IDENTITY="Developer ID Application: …" ./scripts/bundle.sh` for distribution.
+MIT. See [LICENSE](LICENSE).

@@ -217,6 +217,7 @@ struct AboutSettings: View {
             Spacer()
             HStack(spacing: Theme.Space.md) {
                 Button("Show Welcome Screen") { WelcomeWindow.shared.show() }
+                Link("pastely.amenophis.dev", destination: URL(string: "https://pastely.amenophis.dev")!)
                 Link("GitHub", destination: URL(string: "https://github.com/amenophis1er/pastely")!)
             }
             .controlSize(.small)
