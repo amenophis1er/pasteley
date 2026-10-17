@@ -59,6 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
         watcher.start()
         registerHotkey()
+        if !AppSettings.shared.didOnboard { WelcomeWindow.shared.show() }
     }
 
     /// `pastely://history` toggles the panel, `pastely://settings` opens settings.
@@ -69,6 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             case "history": togglePanel()
             case "settings":
                 NotificationCenter.default.post(name: .pastelyOpenSettings, object: nil)
+            case "welcome": WelcomeWindow.shared.show()
             case "pause": store.isPaused = true
             case "resume": store.isPaused = false
             default: break

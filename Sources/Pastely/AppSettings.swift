@@ -18,6 +18,7 @@ final class AppSettings {
     var ignoredApps: [String] { didSet { defaults.set(ignoredApps, forKey: "ignoredApps") } }
     var captureImages: Bool { didSet { defaults.set(captureImages, forKey: "captureImages") } }
     var ocrImages: Bool { didSet { defaults.set(ocrImages, forKey: "ocrImages") } }
+    var didOnboard: Bool { didSet { defaults.set(didOnboard, forKey: "didOnboard") } }
 
     static let defaultIgnoredApps = ["com.apple.keychainaccess", "com.apple.Passwords"]
 
@@ -31,6 +32,7 @@ final class AppSettings {
         ignoredApps = defaults.stringArray(forKey: "ignoredApps") ?? Self.defaultIgnoredApps
         captureImages = defaults.object(forKey: "captureImages") as? Bool ?? true
         ocrImages = defaults.object(forKey: "ocrImages") as? Bool ?? true
+        didOnboard = defaults.bool(forKey: "didOnboard")
     }
 
     // MARK: Launch at login

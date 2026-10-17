@@ -192,6 +192,11 @@ struct AboutSettings: View {
             Text("A small, local-only clipboard manager.\nYour history never leaves this Mac.")
                 .font(Theme.Text.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
             Spacer()
+            HStack(spacing: Theme.Space.md) {
+                Button("Show Welcome Screen") { WelcomeWindow.shared.show() }
+                Link("GitHub", destination: URL(string: "https://github.com/amenophis1er/pastely")!)
+            }
+            .controlSize(.small)
         }
         .padding(Theme.Space.xl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
