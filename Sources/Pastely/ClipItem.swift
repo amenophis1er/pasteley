@@ -25,9 +25,7 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         switch kind {
         case .image:
             // Recognized text tells screenshots apart; size alone does not.
-            if let line = ocrText?.split(whereSeparator: \.isNewline).first.map(String.init), !line.isBlank {
-                return line.count > 48 ? String(line.prefix(48)) + "…" : line
-            }
+            if let title = Self.imageTitle(from: ocrText) { return title }
             return "\(preview) · \(ByteCountFormatter.string(fromByteCount: Int64(byteSize), countStyle: .file))"
         case .file: return preview.split(separator: "\n").first.map(String.init) ?? preview
         default:
@@ -36,6 +34,33 @@ struct ClipItem: Identifiable, Hashable, Sendable {
             // AppKit turns a title of "-" into a separator; keep dashes visible as text.
             return short.hasPrefix("-") || short.isEmpty ? "\u{2009}" + short : short
         }
+    }
+
+    /// Builds a menu title from recognized text: skips fragments (short, few letters),
+    /// and joins the next meaningful lines when the first one is short.
+    static func imageTitle(from ocr: String?, limit: Int = 48) -> String? {
+        guard let ocr else { return nil }
+        let lines = ocr.split(whereSeparator: \.isNewline)
+            .map { line -> String in
+                // Drop leading bullets, dashes and other decoration OCR picks up.
+                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                return String(trimmed.drop { !$0.isLetter && !$0.isNumber && $0 != "$" && $0 != "#" })
+            }
+            .filter { line in
+                let letters = line.filter(\.isLetter).count
+                let words = line.split(separator: " ").count
+                return line.count >= 4 && letters >= 3 && (letters * 2 >= line.count || words >= 2)
+            }
+        guard !lines.isEmpty else { return nil }
+        // A line with several words reads like a sentence; prefer it over a lone fragment.
+        let start = lines.firstIndex { $0.split(separator: " ").count >= 2 } ?? 0
+        var title = lines[start]
+        for line in lines[(start + 1)...] where title.count < 20 {
+            let joined = title + " · " + line
+            if joined.count > limit { break }
+            title = joined
+        }
+        return title.count > limit ? String(title.prefix(limit)) + "…" : title
     }
 
     /// What search matches against.
