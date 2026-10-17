@@ -37,7 +37,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             let row = NSMenuItem(title: item.menuTitle, action: #selector(copyItem(_:)), keyEquivalent: "")
             row.target = self
             row.representedObject = item
-            row.image = AssetCache.menuThumbnail(for: item) ?? NSImage(systemSymbolName: item.kind.symbol, accessibilityDescription: item.kind.label)
+            // Kind glyphs only; the hover card shows the actual thumbnail at a useful size.
+            row.image = NSImage(systemSymbolName: item.kind.symbol, accessibilityDescription: item.kind.label)
             menu.addItem(row)
         }
         menu.addItem(.separator())
