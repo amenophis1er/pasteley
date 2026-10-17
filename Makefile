@@ -4,7 +4,7 @@
 #   xcrun notarytool store-credentials pastely-notary --apple-id <id> --team-id L33ZEUXVN4 --password <app-specific password>
 # CI passes APPLE_ID / DEVELOPMENT_TEAM / NOTARIZE_PASSWORD instead.
 
-.PHONY: help build test app release notarize dmg clean
+.PHONY: help build test app release notarize dmg appcast clean
 
 VERSION ?= $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Resources/Info.plist)
 BUILD_DIR := build.noindex
@@ -56,6 +56,9 @@ dmg: notarize ## Package the stapled app into a notarized drag-to-Applications D
 	xcrun stapler staple "$(DMG)"
 	rm -rf $(BUILD_DIR)/dmg-staging
 	@echo "Built $(DMG)"; shasum -a 256 "$(DMG)"
+
+appcast: ## Sign the DMG for Sparkle and write build.noindex/appcast.xml
+	./scripts/appcast.sh "$(DMG)" "$(VERSION)" "$$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' $(RELEASE_APP)/Contents/Info.plist)" $(BUILD_DIR)/appcast.xml
 
 clean: ## Remove build outputs
 	rm -rf $(BUILD_DIR) Pastely.app .build

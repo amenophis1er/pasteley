@@ -20,6 +20,7 @@ swift test
 - **Menu bar icon** lists the 10 newest items, pause/resume capture, Settings.
 - **Settings** (Cmd+,): hotkey recorder, launch at login, Accessibility status, retention, image cap, ignored apps.
 - **URL scheme** for launchers and scripts: `open pastely://history`, `pastely://settings`, `pastely://pause`, `pastely://resume`.
+- **Updates** arrive through Sparkle from GitHub Releases. Check from the menu bar or turn automatic checks off in Settings.
 
 ## Layout
 
@@ -44,6 +45,10 @@ git tag v0.1.0 && git push origin v0.1.0
 Locally, `make dmg` does the same with your Developer ID certificate and the `pastely-notary` keychain profile.
 
 Default hotkey: Cmd+Shift+V. Pasting into the front app needs Accessibility permission, which macOS prompts for on first paste.
+
+## Dev builds
+
+`./scripts/bundle.sh` produces `Pastely Dev` with bundle id `com.amenophis.pastely.dev`, its own preferences, Accessibility entry, keychain key, history folder and `pastely-dev://` scheme, so it runs beside the installed release without touching it. Dev builds have no update feed.
 
 ## Signing note
 

@@ -65,6 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         watcher.start()
         registerHotkey()
+        _ = UpdaterManager.shared // starts Sparkle's scheduled checks for release builds
         if !AppSettings.shared.didOnboard { WelcomeWindow.shared.show() }
     }
 
@@ -159,6 +160,9 @@ struct MenuBarContent: View {
         Button("Open History    \(hotkey)") { AppDelegate.shared.togglePanel() }
         Button(store.isPaused ? "Resume Capture" : "Pause Capture") { store.isPaused.toggle() }
         Divider()
+        if UpdaterManager.shared.isEnabled {
+            Button("Check for Updates…") { UpdaterManager.shared.checkForUpdates() }
+        }
         SettingsLink { Text("Settings…") }
             .keyboardShortcut(",")
         Button("Quit Pastely") { NSApp.terminate(nil) }

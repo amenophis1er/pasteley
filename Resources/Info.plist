@@ -6,7 +6,7 @@
     <key>CFBundleDisplayName</key><string>Pastely</string>
     <key>CFBundleIdentifier</key><string>com.amenophis.pastely</string>
     <key>CFBundleVersion</key><string>1</string>
-    <key>CFBundleShortVersionString</key><string>0.1.0</string>
+    <key>CFBundleShortVersionString</key><string>0.2.0</string>
     <key>CFBundleExecutable</key><string>Pastely</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>LSMinimumSystemVersion</key><string>15.0</string>
@@ -19,6 +19,10 @@
         </dict>
     </array>
     <key>LSUIElement</key><true/>
+    <key>SUFeedURL</key><string>https://github.com/amenophis1er/pastely/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key><string>bZnyGVcWIRvQ3tpZgKFQJJ/B3CBYEp31tDpB+0DTXgY=</string>
+    <key>SUEnableAutomaticChecks</key><true/>
+    <key>SUScheduledCheckInterval</key><integer>86400</integer>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSHumanReadableCopyright</key><string>Personal use</string>
 </dict>

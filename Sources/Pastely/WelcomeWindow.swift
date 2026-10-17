@@ -151,7 +151,7 @@ struct WelcomeView: View {
         VStack(spacing: Theme.Space.md) {
             HStack(alignment: .firstTextBaseline, spacing: Theme.Space.xs) {
                 Image(systemName: "lock.fill")
-                Text("History is encrypted on disk. Password managers are never recorded. No network, ever.")
+                Text("History is encrypted on disk and never leaves this Mac. Password managers are never recorded.")
                     .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.center)
             }

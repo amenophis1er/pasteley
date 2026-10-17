@@ -12,7 +12,7 @@ Pastely stores your clipboard history. That makes it sensitive software, so here
 
 ## What it does not do
 
-- No network access of any kind. The app has no networking code.
+- No network access, with one exception: the release build checks GitHub for updates through Sparkle, once a day, and downloads a new DMG only when you accept. Updates are EdDSA-signed and the feed is served from this repository's releases. You can turn automatic checks off in Settings, General. Nothing about your history is sent; the request carries only the app version and macOS version. Dev builds have no update feed at all.
 - No sandbox: pasting into the front app requires the Accessibility permission, which the App Sandbox blocks.
 - No telemetry, no crash reporting, no analytics.
 

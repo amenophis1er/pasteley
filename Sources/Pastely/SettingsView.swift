@@ -21,6 +21,7 @@ struct GeneralSettings: View {
     @Bindable private var settings = AppSettings.shared
     @State private var accessibility = Paster.isTrusted()
     @State private var launchAtLogin = AppSettings.shared.launchAtLogin
+    @State private var autoUpdate = UpdaterManager.shared.automaticallyChecks
     private let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -45,6 +46,20 @@ struct GeneralSettings: View {
             } footer: {
                 Text("Needed to paste into the front app after you pick an item. Without it, Pastely copies the item and you paste with ⌘V.")
                     .font(Theme.Text.caption).foregroundStyle(.secondary)
+            }
+            Section("Updates") {
+                if UpdaterManager.shared.isEnabled {
+                    Toggle("Check for updates automatically", isOn: $autoUpdate)
+                        .onChange(of: autoUpdate) { _, on in UpdaterManager.shared.automaticallyChecks = on }
+                    LabeledContent(AppInfo.versionLine) {
+                        Button("Check Now") { UpdaterManager.shared.checkForUpdates() }
+                            .disabled(!UpdaterManager.shared.canCheck)
+                    }
+                } else {
+                    LabeledContent(AppInfo.versionLine) {
+                        Text(AppInfo.isDev ? "Dev build, updates off" : "Updates unavailable").foregroundStyle(.secondary)
+                    }
+                }
             }
         }
         .formStyle(.grouped)

@@ -12,6 +12,11 @@ rm -rf "$APP" && mkdir -p "$(dirname "$APP")"
 mkdir -p "$APP/Contents/MacOS"
 cp .build/release/Pastely "$APP/Contents/MacOS/Pastely"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+
+# Sparkle: embed the framework next to the binary and make the binary look for it there.
+mkdir -p "$APP/Contents/Frameworks"
+cp -R .build/release/Sparkle.framework "$APP/Contents/Frameworks/"
+install_name_tool -add_rpath @executable_path/../Frameworks "$APP/Contents/MacOS/Pastely" 2>/dev/null || true
 PLIST="$APP/Contents/Info.plist"
 COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 /usr/libexec/PlistBuddy -c "Add :PastelyCommit string $COMMIT" "$PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :PastelyCommit $COMMIT" "$PLIST"
@@ -31,6 +36,7 @@ if [ "${PASTELY_DEV:-1}" = "1" ] && [ -z "${VERSION:-}" ]; then
   /usr/libexec/PlistBuddy -c "Set :CFBundleURLTypes:0:CFBundleURLSchemes:0 pastely-dev" "$PLIST"
   /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$PLIST")-dev" "$PLIST"
   /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(date +%Y%m%d%H%M)" "$PLIST"
+  /usr/libexec/PlistBuddy -c "Delete :SUFeedURL" "$PLIST" 2>/dev/null || true
 fi
 mkdir -p "$APP/Contents/Resources"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
@@ -41,5 +47,13 @@ if [ -z "$IDENTITY" ]; then IDENTITY="-"; fi
 # Developer ID builds need a secure timestamp or the notary service rejects them.
 TIMESTAMP=""
 case "$IDENTITY" in *"Developer ID"*) TIMESTAMP="--timestamp" ;; esac
+# Sparkle's nested helpers must carry our identity (and a timestamp) for notarization.
+# Sign inside-out: XPC services and helpers, then the framework, then the app.
+FW="$APP/Contents/Frameworks/Sparkle.framework"
+for nested in "$FW/Versions/B/XPCServices/Installer.xpc" "$FW/Versions/B/XPCServices/Downloader.xpc" \
+              "$FW/Versions/B/Autoupdate" "$FW/Versions/B/Updater.app"; do
+  codesign --force --options runtime $TIMESTAMP --preserve-metadata=entitlements --sign "$IDENTITY" "$nested"
+done
+codesign --force --options runtime $TIMESTAMP --sign "$IDENTITY" "$FW"
 codesign --force --options runtime $TIMESTAMP --sign "$IDENTITY" "$APP"
 echo "Built $APP signed as: $IDENTITY"
