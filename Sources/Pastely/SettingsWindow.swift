@@ -9,9 +9,14 @@ final class SettingsWindow {
 
     func show() {
         if window == nil {
-            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 440),
-                             styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            let w = NSWindow(contentRect: NSRect(origin: .zero, size: SettingsView.size),
+                             styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
             w.title = AppInfo.isDev ? "Pastely Dev Settings" : "Pastely Settings"
+            w.titleVisibility = .hidden
+            w.titlebarAppearsTransparent = true
+            w.isMovableByWindowBackground = true
+            w.standardWindowButton(.miniaturizeButton)?.isHidden = true
+            w.standardWindowButton(.zoomButton)?.isHidden = true
             w.isReleasedWhenClosed = false
             w.contentView = NSHostingView(rootView: SettingsView())
             w.center()

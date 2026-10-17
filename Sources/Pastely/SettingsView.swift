@@ -2,19 +2,53 @@ import AppKit
 import SwiftUI
 
 struct SettingsView: View {
-    enum Tab: Hashable { case general, history, privacy, about }
+    enum Tab: String, CaseIterable, Hashable {
+        case general, history, privacy, about
+
+        var title: String { rawValue.capitalized }
+        var symbol: String {
+            switch self {
+            case .general: "gearshape"
+            case .history: "clock.arrow.circlepath"
+            case .privacy: "hand.raised"
+            case .about: "info.circle"
+            }
+        }
+    }
+
+    static let size = CGSize(width: 560, height: 500)
     @State private var tab: Tab
 
     init(initialTab: Tab = .general) { _tab = State(initialValue: initialTab) }
 
     var body: some View {
-        TabView(selection: $tab) {
-            GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }.tag(Tab.general)
-            HistorySettings().tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag(Tab.history)
-            PrivacySettings().tabItem { Label("Privacy", systemImage: "hand.raised") }.tag(Tab.privacy)
-            AboutSettings().tabItem { Label("About", systemImage: "info.circle") }.tag(Tab.about)
+        VStack(spacing: 0) {
+            // Chip tab bar, the same component language as the panel's filters.
+            HStack(spacing: Theme.Space.sm) {
+                ForEach(Tab.allCases, id: \.self) { t in
+                    FilterChip(title: t.title, symbol: t.symbol, isOn: tab == t) { tab = t }
+                }
+            }
+            .padding(.top, 38) // clear the (transparent) title bar and traffic lights
+            .padding(.bottom, Theme.Space.md)
+            Divider()
+            Group {
+                switch tab {
+                case .general: GeneralSettings()
+                case .history: HistorySettings()
+                case .privacy: PrivacySettings()
+                case .about: AboutSettings()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(width: 560, height: 440)
+        .frame(width: Self.size.width, height: Self.size.height)
+        .background {
+            ZStack(alignment: .top) {
+                Color(nsColor: .windowBackgroundColor)
+                Theme.wash.frame(height: 120)
+            }
+        }
         .tint(Theme.accent)
     }
 }
@@ -67,6 +101,7 @@ struct GeneralSettings: View {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
         .onChange(of: settings.hotkeyKeyCode) { _, _ in AppDelegate.shared.registerHotkey() }
         .onChange(of: settings.hotkeyModifiers) { _, _ in AppDelegate.shared.registerHotkey() }
         .onReceive(timer) { _ in if !Screenshots.isRendering { accessibility = Paster.isTrusted() } }
@@ -118,6 +153,7 @@ struct HistorySettings: View {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
         .onChange(of: settings.maxItems) { _, _ in AppDelegate.shared.applyRetention() }
         .onChange(of: settings.maxAgeDays) { _, _ in AppDelegate.shared.applyRetention() }
         .confirmationDialog(clearTitle, isPresented: $confirmClear, titleVisibility: .visible) {
@@ -183,6 +219,7 @@ struct PrivacySettings: View {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
     }
 
     private var runningApps: [NSRunningApplication] {
