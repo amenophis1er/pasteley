@@ -155,7 +155,7 @@ struct MenuBarContent: View {
                 AppDelegate.shared.paster.copy(item)
             } label: {
                 if let thumb = AssetCache.menuThumbnail(for: item) {
-                    Label { Text(item.menuTitle) } icon: { Image(nsImage: thumb) }
+                    Label { Text(item.menuTitle) } icon: { Image(nsImage: thumb).renderingMode(.original) }
                 } else {
                     Label(item.menuTitle, systemImage: item.kind.symbol)
                 }

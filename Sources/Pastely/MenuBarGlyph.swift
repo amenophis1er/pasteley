@@ -3,13 +3,15 @@ import AppKit
 /// Menu bar icon drawn in code so it matches the app icon. Template so macOS
 /// recolors it for light and dark menu bars.
 enum MenuBarGlyph {
-    static let normal = make(paused: false)
-    static let paused = make(paused: true)
+    static let normal = make(paused: false, dev: AppInfo.isDev)
+    static let paused = make(paused: true, dev: AppInfo.isDev)
 
-    private static func make(paused: Bool) -> NSImage {
+    /// Dev builds get a solid indigo glyph instead of a template, so the two instances
+    /// are easy to tell apart in the menu bar. Indigo reads on both light and dark bars.
+    private static func make(paused: Bool, dev: Bool) -> NSImage {
         let size = NSSize(width: 18, height: 18)
         let image = NSImage(size: size, flipped: false) { _ in
-            let ink = NSColor.black
+            let ink = dev ? NSColor(calibratedRed: 0.36, green: 0.42, blue: 1.0, alpha: 1) : NSColor.black
             // Board
             let board = NSRect(x: 3.5, y: 1, width: 11, height: 14)
             let boardPath = NSBezierPath(roundedRect: board, xRadius: 2.2, yRadius: 2.2)
@@ -38,7 +40,7 @@ enum MenuBarGlyph {
             }
             return true
         }
-        image.isTemplate = true
+        image.isTemplate = !dev
         return image
     }
 }
