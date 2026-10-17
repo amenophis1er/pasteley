@@ -9,8 +9,9 @@ final class WelcomeWindow {
 
     func show() {
         if let window {
+            NSApp.activate(ignoringOtherApps: true)
             window.makeKeyAndOrderFront(nil)
-            NSApp.activate()
+            window.orderFrontRegardless()
             return
         }
         let w = NSWindow(
@@ -30,8 +31,9 @@ final class WelcomeWindow {
         w.contentView = NSHostingView(rootView: WelcomeView { [weak self] in self?.finish() })
         w.center()
         window = w
+        NSApp.activate(ignoringOtherApps: true)
         w.makeKeyAndOrderFront(nil)
-        NSApp.activate()
+        w.orderFrontRegardless()
     }
 
     func close() {

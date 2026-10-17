@@ -70,8 +70,10 @@ final class ReportWindow {
             w.center()
             window = w
         }
-        NSApp.activate()
+        // An accessory app opening a window from a menu or URL must insist on coming forward.
+        NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
+        window?.orderFrontRegardless()
     }
 }
 
@@ -110,7 +112,7 @@ struct ReportView: View {
                 .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: Theme.Radius.sm))
                 .overlay(RoundedRectangle(cornerRadius: Theme.Radius.sm).strokeBorder(Color.primary.opacity(0.1)))
 
-            TextField("Email, if you'd like a reply (optional)", text: $email)
+            TextField("Email, if you'd like a reply (optional, kept private)", text: $email)
                 .textFieldStyle(.roundedBorder)
 
             Text("Sent with the report").font(Theme.Text.caption.weight(.semibold)).padding(.top, Theme.Space.xs)
@@ -123,7 +125,7 @@ struct ReportView: View {
             }
             .frame(height: 120)
             .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: Theme.Radius.sm))
-            Text("Nothing from your clipboard history is included. The report becomes a public issue on GitHub.")
+            Text("Nothing from your clipboard history is included. Your description and the block above become a public issue on GitHub; your email does not.")
                 .font(Theme.Text.caption).foregroundStyle(.secondary)
 
             if let error {

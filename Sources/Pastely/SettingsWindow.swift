@@ -22,7 +22,9 @@ final class SettingsWindow {
             w.center()
             window = w
         }
-        NSApp.activate()
+        // An accessory app opening a window from a menu or URL must insist on coming forward.
+        NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
+        window?.orderFrontRegardless()
     }
 }
