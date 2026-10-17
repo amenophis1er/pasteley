@@ -9,6 +9,9 @@ final class PasteboardWatcher {
     private let pasteboard = NSPasteboard.general
     private var lastChangeCount: Int
     private var timer: Timer?
+    /// Front app at the previous tick. A change seen now happened between then and now,
+    /// so the copy came from either app; both are checked against the ignore list.
+    private var previousFrontApp: String?
 
     private var settings: AppSettings { AppSettings.shared }
 
@@ -37,31 +40,44 @@ final class PasteboardWatcher {
     }
 
     private func tick() {
+        let frontApp = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        let previous = previousFrontApp
+        previousFrontApp = frontApp
+
         let count = pasteboard.changeCount
         guard count != lastChangeCount else { return }
         lastChangeCount = count
         guard !store.isPaused else { return }
-        guard let (item, payload) = capture() else { return }
+        if Self.shouldIgnore(front: frontApp, previous: previous, ignored: settings.ignoredApps) { return }
+        // The copy most likely happened in the app that was in front before this tick.
+        guard let (item, payload) = capture(sourceApp: previous ?? frontApp) else { return }
         store.maxItems = settings.maxItems
         store.maxAgeDays = settings.maxAgeDays
-        let (id, isNew) = store.insert(item, payload: payload)
-        if isNew, item.kind == .image, settings.ocrImages {
-            let store = store
-            Task {
-                if let text = await ImageTextRecognizer.recognize(payload) {
-                    store.setOCRText(text, for: id)
+        do {
+            let (id, isNew) = try store.insert(item, payload: payload)
+            if isNew, item.kind == .image, settings.ocrImages {
+                let store = store
+                Task {
+                    if let text = await ImageTextRecognizer.recognize(payload) {
+                        try? store.setOCRText(text, for: id)
+                    }
                 }
             }
+        } catch {
+            NSLog("Pastely: capture dropped, %@", String(describing: error))
         }
     }
 
+    /// Skip when the app in front now, or at the previous tick, is on the ignore list.
+    /// The copy happened somewhere in that window and attribution is not certain.
+    nonisolated static func shouldIgnore(front: String?, previous: String?, ignored: [String]) -> Bool {
+        [front, previous].compactMap { $0 }.contains { ignored.contains($0) }
+    }
+
     /// Reads the current pasteboard into a ClipItem, or nil when it should be skipped.
-    func capture() -> (ClipItem, Data)? {
+    func capture(sourceApp frontApp: String?) -> (ClipItem, Data)? {
         guard let types = pasteboard.types, !types.isEmpty else { return nil }
         if types.contains(where: Self.privateTypes.contains) { return nil }
-
-        let frontApp = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
-        if let frontApp, settings.ignoredApps.contains(frontApp) { return nil }
 
         // Files first: Finder puts both file URLs and a textual path on the board.
         if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
@@ -104,11 +120,19 @@ final class PasteboardWatcher {
             thumb: thumb,
             ocrText: nil,
             byteSize: payload.count,
-            contentHash: SHA256.hash(data: payload).map { String(format: "%02x", $0) }.joined(),
+            contentHash: Self.contentHash(kind: kind, payload: payload),
             sourceApp: app,
             pinned: false
         )
         return (item, payload)
+    }
+
+    /// Identity includes the kind: the text "/tmp/a" and the file /tmp/a are different clips.
+    nonisolated static func contentHash(kind: ClipKind, payload: Data) -> String {
+        var hasher = SHA256()
+        hasher.update(data: Data((kind.rawValue + ":").utf8))
+        hasher.update(data: payload)
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     /// Small PNG for the row thumbnail, made once at capture so rows never decode the full image.

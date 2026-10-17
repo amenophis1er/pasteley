@@ -55,53 +55,67 @@ final class ClipStore {
     // MARK: - Writes
 
     /// Inserts or bumps, and returns the row id. `isNew` is false for a repeat copy.
+    /// Throws, and writes nothing, if encryption or the database write fails.
     @discardableResult
-    func insert(_ item: ClipItem, payload: Data) -> (id: Int64, isNew: Bool) {
+    func insert(_ item: ClipItem, payload: Data) throws -> (id: Int64, isNew: Bool) {
         // A repeat copy bumps the existing row instead of duplicating it.
         if let existing = items.first(where: { $0.contentHash == item.contentHash }) {
-            run("UPDATE items SET created_at = ? WHERE id = ?") { stmt in
+            try run("UPDATE items SET created_at = ? WHERE id = ?") { stmt in
                 sqlite3_bind_double(stmt, 1, item.createdAt.timeIntervalSince1970)
                 sqlite3_bind_int64(stmt, 2, existing.id)
             }
             reload()
             return (existing.id, false)
-        } else {
-            run("""
-            INSERT INTO items (created_at, kind, uti, preview, payload, byte_size, content_hash, source_app, pinned, thumb)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
-            """) { stmt in
-                sqlite3_bind_double(stmt, 1, item.createdAt.timeIntervalSince1970)
-                bind(stmt, 2, item.kind.rawValue)
-                bind(stmt, 3, item.uti)
-                bind(stmt, 4, Crypto.seal(Data(item.preview.utf8)))
-                bind(stmt, 5, Crypto.seal(payload))
-                sqlite3_bind_int64(stmt, 6, Int64(item.byteSize))
-                bind(stmt, 7, item.contentHash)
-                if let app = item.sourceApp { bind(stmt, 8, app) } else { sqlite3_bind_null(stmt, 8) }
-                if let thumb = item.thumb { bind(stmt, 9, Crypto.seal(thumb)) } else { sqlite3_bind_null(stmt, 9) }
-            }
-            let id = sqlite3_last_insert_rowid(db)
-            prune()
-            reload()
-            return (id, true)
         }
+        // Encrypt everything before touching the database, so a crypto failure writes nothing.
+        let sealedPreview = try Crypto.seal(Data(item.preview.utf8))
+        let sealedPayload = try Crypto.seal(payload)
+        let sealedThumb = try item.thumb.map { try Crypto.seal($0) }
+        try run("""
+        INSERT INTO items (created_at, kind, uti, preview, payload, byte_size, content_hash, source_app, pinned, thumb)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+        """) { stmt in
+            sqlite3_bind_double(stmt, 1, item.createdAt.timeIntervalSince1970)
+            bind(stmt, 2, item.kind.rawValue)
+            bind(stmt, 3, item.uti)
+            bind(stmt, 4, sealedPreview)
+            bind(stmt, 5, sealedPayload)
+            sqlite3_bind_int64(stmt, 6, Int64(item.byteSize))
+            bind(stmt, 7, item.contentHash)
+            if let app = item.sourceApp { bind(stmt, 8, app) } else { sqlite3_bind_null(stmt, 8) }
+            if let thumb = sealedThumb { bind(stmt, 9, thumb) } else { sqlite3_bind_null(stmt, 9) }
+        }
+        let id = sqlite3_last_insert_rowid(db)
+        prune()
+        reload()
+        return (id, true)
     }
 
-    func setOCRText(_ text: String, for id: Int64) {
-        run("UPDATE items SET ocr_text = ? WHERE id = ?") { stmt in
-            bind(stmt, 1, Crypto.seal(Data(text.utf8)))
+    func setOCRText(_ text: String, for id: Int64) throws {
+        let sealed = try Crypto.seal(Data(text.utf8))
+        try run("UPDATE items SET ocr_text = ? WHERE id = ?") { stmt in
+            bind(stmt, 1, sealed)
             sqlite3_bind_int64(stmt, 2, id)
         }
         reload()
     }
 
+    /// Applies new retention limits immediately, without waiting for the next copy.
+    func applyRetention(maxItems: Int, maxAgeDays: Int) {
+        self.maxItems = maxItems
+        self.maxAgeDays = maxAgeDays
+        prune()
+        reload()
+    }
+
     func togglePin(_ item: ClipItem) {
-        run("UPDATE items SET pinned = NOT pinned WHERE id = ?") { sqlite3_bind_int64($0, 1, item.id) }
+        try? run("UPDATE items SET pinned = NOT pinned WHERE id = ?") { sqlite3_bind_int64($0, 1, item.id) }
+        prune() // an unpinned item is subject to the caps again
         reload()
     }
 
     func delete(_ item: ClipItem) {
-        run("DELETE FROM items WHERE id = ?") { sqlite3_bind_int64($0, 1, item.id) }
+        try? run("DELETE FROM items WHERE id = ?") { sqlite3_bind_int64($0, 1, item.id) }
         reload()
     }
 
@@ -113,8 +127,8 @@ final class ClipStore {
     /// Drops unpinned rows beyond the count or age cap.
     func prune() {
         let cutoff = Date().addingTimeInterval(-Double(maxAgeDays) * 86_400).timeIntervalSince1970
-        run("DELETE FROM items WHERE pinned = 0 AND created_at < ?") { sqlite3_bind_double($0, 1, cutoff) }
-        run("""
+        try? run("DELETE FROM items WHERE pinned = 0 AND created_at < ?") { sqlite3_bind_double($0, 1, cutoff) }
+        try? run("""
         DELETE FROM items WHERE pinned = 0 AND id NOT IN (
             SELECT id FROM items WHERE pinned = 0 ORDER BY created_at DESC LIMIT ?
         )
@@ -202,12 +216,16 @@ final class ClipStore {
         sqlite3_exec(db, sql, nil, nil, nil)
     }
 
-    private func run(_ sql: String, bind: (OpaquePointer) -> Void) {
+    private func run(_ sql: String, bind: (OpaquePointer) -> Void) throws {
         var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK, let stmt else { return }
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK, let stmt else {
+            throw StoreError.write(String(cString: sqlite3_errmsg(db)))
+        }
         defer { sqlite3_finalize(stmt) }
         bind(stmt)
-        sqlite3_step(stmt)
+        guard sqlite3_step(stmt) == SQLITE_DONE else {
+            throw StoreError.write(String(cString: sqlite3_errmsg(db)))
+        }
     }
 
     private func bind(_ stmt: OpaquePointer, _ index: Int32, _ text: String) {
@@ -227,5 +245,6 @@ final class ClipStore {
 
     enum StoreError: Error {
         case open(String)
+        case write(String)
     }
 }

@@ -41,12 +41,14 @@ final class WelcomeWindow {
     }
 
     /// "Open My History": close the welcome and show the panel so people see where the app lives.
+    /// The first-use tip is armed only the first time through, not when reopened from Settings.
     func finish() {
-        AppSettings.shared.showFirstUseTip = true
+        let firstTime = !AppSettings.shared.didOnboard
         close()
+        if firstTime { AppSettings.shared.showFirstUseTip = true }
         NSApp.deactivate()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            AppDelegate.shared.togglePanel()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            AppDelegate.shared.showPanel()
         }
     }
 }

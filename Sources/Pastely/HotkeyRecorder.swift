@@ -9,7 +9,7 @@ struct HotkeyRecorder: View {
     @State private var recording = false
 
     private var label: String {
-        HotkeyManager.Modifiers(rawValue: modifiers).symbols + HotkeyManager.keyName(keyCode)
+        HotkeyManager.label(keyCode: keyCode, modifiers: modifiers)
     }
 
     var body: some View {

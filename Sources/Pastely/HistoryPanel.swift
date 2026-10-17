@@ -180,18 +180,26 @@ final class HistoryViewModel {
 
     func choose(plain: Bool = false) {
         guard let item = selectedItem else { return }
+        tipDone()
         onSelect?(item, plain)
     }
 
     func chooseIndex(_ n: Int) {
         let list = results
         guard n >= 1, n <= list.count else { return }
+        tipDone()
         onSelect?(list[n - 1], false)
+    }
+
+    /// Any paste or copy proves the user found the panel; retire the first-use tip.
+    private func tipDone() {
+        if AppSettings.shared.showFirstUseTip { AppSettings.shared.showFirstUseTip = false }
     }
 
     /// Puts the item on the pasteboard and closes the panel so the user can ⌘V wherever they like.
     func copy(_ item: ClipItem, plain: Bool = false) {
-        AppDelegate.shared.paster.copy(item, asPlainText: plain)
+        tipDone()
+        guard AppDelegate.shared.paster.copy(item, asPlainText: plain) else { return }
         AppDelegate.shared.panel.hide()
     }
 
@@ -369,31 +377,32 @@ struct HistoryView: View {
         }
     }
 
-    @ViewBuilder
+    /// The one-time tip sits above the keyboard hints, never in place of them.
     private var footer: some View {
-        if AppSettings.shared.showFirstUseTip {
-            HStack(spacing: Theme.Space.sm) {
-                Image(systemName: "sparkles").foregroundStyle(Theme.accent)
-                Text("Pastely lives in your menu bar. Press ")
-                    + Text(hotkeyLabel).bold()
-                    + Text(" anytime to open this.")
-                Spacer()
-                Button("Got it") { AppSettings.shared.showFirstUseTip = false }
-                    .controlSize(.small)
+        VStack(spacing: 0) {
+            if AppSettings.shared.showFirstUseTip {
+                HStack(spacing: Theme.Space.sm) {
+                    Image(systemName: "sparkles").foregroundStyle(Theme.accent)
+                    Text("Pastely lives in your menu bar. Press ")
+                        + Text(hotkeyLabel).bold()
+                        + Text(" anytime to open this.")
+                    Spacer()
+                    Button("Got it") { AppSettings.shared.showFirstUseTip = false }
+                        .controlSize(.small)
+                }
+                .font(Theme.Text.caption)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, Theme.Space.lg)
+                .padding(.vertical, Theme.Space.sm)
+                .background(Theme.accent.opacity(0.08))
+                Divider()
             }
-            .font(Theme.Text.caption)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, Theme.Space.lg)
-            .padding(.vertical, Theme.Space.sm)
-            .background(Theme.accent.opacity(0.08))
-        } else {
             hints
         }
     }
 
     private var hotkeyLabel: String {
-        HotkeyManager.Modifiers(rawValue: AppSettings.shared.hotkeyModifiers).symbols
-            + HotkeyManager.keyName(AppSettings.shared.hotkeyKeyCode)
+        HotkeyManager.label(keyCode: AppSettings.shared.hotkeyKeyCode, modifiers: AppSettings.shared.hotkeyModifiers)
     }
 
     private var hints: some View {

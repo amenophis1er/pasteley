@@ -10,14 +10,23 @@ final class Paster {
     init(store: ClipStore) { self.store = store }
 
     func rememberFrontApp() {
-        previousApp = NSWorkspace.shared.frontmostApplication
+        // Never target ourselves (the welcome window or settings may be in front).
+        guard let app = NSWorkspace.shared.frontmostApplication,
+              app.bundleIdentifier != Bundle.main.bundleIdentifier else { return }
+        previousApp = app
     }
 
-    func copy(_ item: ClipItem, asPlainText: Bool = false) {
+    /// Writes the item to the pasteboard. Returns false, leaving the pasteboard untouched,
+    /// when the payload cannot be read or decrypted.
+    @discardableResult
+    func copy(_ item: ClipItem, asPlainText: Bool = false) -> Bool {
+        guard let payload = store.payload(for: item) else {
+            NSSound.beep()
+            return false
+        }
+        let text = item.text(from: payload) ?? ""
         let pb = NSPasteboard.general
         pb.clearContents()
-        let payload = store.payload(for: item) ?? Data()
-        let text = item.text(from: payload) ?? ""
         switch item.kind {
         case .text:
             pb.setString(text, forType: .string)
@@ -36,13 +45,18 @@ final class Paster {
                 pb.setData(payload, forType: .png)
             }
         case .file:
-            let urls = item.preview.split(separator: "\n").map { URL(fileURLWithPath: String($0)) as NSURL }
-            pb.writeObjects(urls)
+            if asPlainText {
+                pb.setString(item.preview, forType: .string)
+            } else {
+                let urls = item.preview.split(separator: "\n").map { URL(fileURLWithPath: String($0)) as NSURL }
+                pb.writeObjects(urls)
+            }
         }
+        return true
     }
 
     func paste(_ item: ClipItem, asPlainText: Bool = false) {
-        copy(item, asPlainText: asPlainText)
+        guard copy(item, asPlainText: asPlainText) else { return }
         guard Self.ensureAccessibility() else { return }
         previousApp?.activate()
         // Give the target app one run loop turn to become key before the keystroke lands.

@@ -99,6 +99,8 @@ struct HistorySettings: View {
             }
         }
         .formStyle(.grouped)
+        .onChange(of: settings.maxItems) { _, _ in AppDelegate.shared.applyRetention() }
+        .onChange(of: settings.maxAgeDays) { _, _ in AppDelegate.shared.applyRetention() }
         .confirmationDialog(clearTitle, isPresented: $confirmClear, titleVisibility: .visible) {
             Button("Clear", role: .destructive) { AppDelegate.shared.store.clear() }
             Button("Cancel", role: .cancel) {}

@@ -28,14 +28,21 @@ final class HotkeyManager {
         }
     }
 
-    init(keyCode: UInt32, modifiers: Modifiers, handler: @escaping () -> Void) {
+    /// Nil when the system refuses the combination, typically because another app owns it.
+    init?(keyCode: UInt32, modifiers: Modifiers, handler: @escaping () -> Void) {
         id = Self.nextID
         Self.nextID += 1
-        Self.handlers[id] = handler
         Self.installHandlerIfNeeded()
 
         let hotKeyID = EventHotKeyID(signature: OSType(0x5053544C) /* PSTL */, id: id)
-        RegisterEventHotKey(keyCode, modifiers.rawValue, hotKeyID, GetApplicationEventTarget(), 0, &ref)
+        let status = RegisterEventHotKey(keyCode, modifiers.rawValue, hotKeyID, GetApplicationEventTarget(), 0, &ref)
+        guard status == noErr, ref != nil else { return nil }
+        Self.handlers[id] = handler
+    }
+
+    /// "⇧⌘V" style label for a stored combination.
+    static func label(keyCode: UInt32, modifiers: UInt32) -> String {
+        Modifiers(rawValue: modifiers).symbols + keyName(keyCode)
     }
 
     deinit {
