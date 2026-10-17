@@ -58,6 +58,12 @@ struct GeneralSettings: View {
 
 struct HistorySettings: View {
     @Bindable private var settings = AppSettings.shared
+    @State private var confirmClear = false
+
+    private var clearTitle: String {
+        let n = AppDelegate.shared.store.items.filter { !$0.pinned }.count
+        return n == 1 ? "Delete 1 unpinned item?" : "Delete \(n) unpinned items?"
+    }
 
     var body: some View {
         Form {
@@ -89,10 +95,16 @@ struct HistorySettings: View {
                     Text("\(store.items.count) items · \(ByteCountFormatter.string(fromByteCount: Int64(store.totalBytes), countStyle: .file))")
                         .foregroundStyle(.secondary)
                 }
-                Button("Clear unpinned history", role: .destructive) { AppDelegate.shared.store.clear() }
+                Button("Clear unpinned history…", role: .destructive) { confirmClear = true }
             }
         }
         .formStyle(.grouped)
+        .confirmationDialog(clearTitle, isPresented: $confirmClear, titleVisibility: .visible) {
+            Button("Clear", role: .destructive) { AppDelegate.shared.store.clear() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Pinned items are kept. This cannot be undone.")
+        }
     }
 }
 
