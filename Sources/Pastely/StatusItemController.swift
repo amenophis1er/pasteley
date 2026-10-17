@@ -40,6 +40,15 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             // Kind glyphs only; the hover card shows the actual thumbnail at a useful size.
             row.image = NSImage(systemSymbolName: item.kind.symbol, accessibilityDescription: item.kind.label)
             menu.addItem(row)
+
+            // Option-click: open the history panel with this item selected.
+            let reveal = NSMenuItem(title: "Show \u{201C}\(item.menuTitle)\u{201D} in History", action: #selector(revealItem(_:)), keyEquivalent: "")
+            reveal.target = self
+            reveal.representedObject = item
+            reveal.image = NSImage(systemSymbolName: "rectangle.and.text.magnifyingglass", accessibilityDescription: nil)
+            reveal.isAlternate = true
+            reveal.keyEquivalentModifierMask = .option
+            menu.addItem(reveal)
         }
         menu.addItem(.separator())
         let open = NSMenuItem(title: "Open History", action: #selector(openHistory), keyEquivalent: "v")
@@ -83,6 +92,11 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     }
 
     @objc private func openHistory() { AppDelegate.shared.togglePanel() }
+
+    @objc private func revealItem(_ sender: NSMenuItem) {
+        guard let clip = sender.representedObject as? ClipItem else { return }
+        AppDelegate.shared.showPanel(selecting: clip.id)
+    }
 
     @objc private func togglePause() {
         store.isPaused.toggle()

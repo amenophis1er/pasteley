@@ -46,6 +46,13 @@ final class HistoryPanel {
         panel.orderOut(nil)
     }
 
+    /// Clears any filter so the item is visible, then selects it.
+    func select(_ id: Int64) {
+        model.query = ""
+        model.filter = .all
+        model.selection = id
+    }
+
     /// Below the caret or focused field when known, else centred on the mouse's screen.
     /// Always clamped inside that screen's visible frame.
     static func origin(near target: CGRect?) -> NSPoint {

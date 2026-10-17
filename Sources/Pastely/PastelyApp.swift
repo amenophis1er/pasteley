@@ -95,8 +95,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if panel.isVisible { panel.hide() } else { openPanel() }
     }
 
-    func showPanel() {
+    func showPanel(selecting id: Int64? = nil) {
         if !panel.isVisible { openPanel() }
+        if let id { panel.select(id) }
     }
 
     private func openPanel() {
