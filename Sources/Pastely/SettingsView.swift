@@ -16,7 +16,7 @@ struct SettingsView: View {
         }
     }
 
-    static let size = CGSize(width: 560, height: 500)
+    static let size = CGSize(width: 560, height: 600)
     @State private var tab: Tab
 
     init(initialTab: Tab = .general) { _tab = State(initialValue: initialTab) }
