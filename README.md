@@ -4,7 +4,7 @@
 
 Website: [pastely.amenophis.dev](https://pastely.amenophis.dev) · Download: [latest release](https://github.com/amenophis1er/pastely/releases/latest)
 
-![The Pastely history panel](docs/history-panel.png)
+![The Pastely history panel](https://pastely.amenophis.dev/assets/panel-dark.png)
 
 ## What it does
 
@@ -14,7 +14,7 @@ Website: [pastely.amenophis.dev](https://pastely.amenophis.dev) · Download: [la
 - Filters for text, images, files and pinned items. Pins survive cleanup.
 - Updates itself through Sparkle from GitHub Releases.
 
-![Searching for a word found inside a screenshot](docs/history-search.png)
+![Searching for a word found inside a screenshot](https://pastely.amenophis.dev/assets/search-dark.png)
 
 ## Privacy
 
