@@ -35,6 +35,7 @@ app: ## Dev bundle at ./Pastely.app, signed with the Apple Development cert
 release: ## Release bundle at build/Pastely.app, Developer ID signed with timestamp
 	@test -n "$(DEV_ID)" || { echo "No Developer ID Application certificate found"; exit 1; }
 	mkdir -p $(BUILD_DIR)
+	touch $(BUILD_DIR)/.metadata_never_index
 	APP_PATH="$(RELEASE_APP)" SIGN_IDENTITY="$(DEV_ID)" VERSION="$(VERSION)" ./scripts/bundle.sh
 	codesign --verify --deep --strict --verbose=2 "$(RELEASE_APP)"
 
@@ -54,6 +55,7 @@ dmg: notarize ## Package the stapled app into a notarized drag-to-Applications D
 	codesign --force --timestamp --sign "$(DEV_ID)" "$(DMG)"
 	xcrun notarytool submit "$(DMG)" $(NOTARY_AUTH) --wait
 	xcrun stapler staple "$(DMG)"
+	rm -rf $(BUILD_DIR)/dmg-staging
 	@echo "Built $(DMG)"; shasum -a 256 "$(DMG)"
 
 clean: ## Remove build outputs
