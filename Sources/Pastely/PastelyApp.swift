@@ -1,37 +1,5 @@
+import AppKit
 import SwiftUI
-
-@main
-struct PastelyApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
-
-    var body: some Scene {
-        MenuBarExtra {
-            MenuBarContent()
-        } label: {
-            MenuBarIcon()
-        }
-        Settings {
-            SettingsView()
-        }
-    }
-}
-
-extension Notification.Name {
-    static let pastelyOpenSettings = Notification.Name("PastelyOpenSettings")
-}
-
-struct MenuBarIcon: View {
-    @Environment(\.openSettings) private var openSettings
-
-    var body: some View {
-        let paused = AppDelegate.shared?.store.isPaused ?? false
-        Image(nsImage: paused ? MenuBarGlyph.paused : MenuBarGlyph.normal)
-            .onReceive(NotificationCenter.default.publisher(for: .pastelyOpenSettings)) { _ in
-                NSApp.activate()
-                openSettings()
-            }
-    }
-}
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -41,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let watcher: PasteboardWatcher
     let panel: HistoryPanel
     let paster: Paster
+    private var statusItem: StatusItemController?
     private var hotkey: HotkeyManager?
     private var hotkeyCombo: (keyCode: UInt32, modifiers: UInt32)?
     private var retentionTimer: Timer?
@@ -59,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        statusItem = StatusItemController(store: store)
         applyRetention()
         retentionTimer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { _ in
             Task { @MainActor in AppDelegate.shared.applyRetention() }
@@ -81,12 +51,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for url in urls {
             switch url.host {
             case "history": togglePanel()
-            case "settings":
-                NotificationCenter.default.post(name: .pastelyOpenSettings, object: nil)
+            case "settings": SettingsWindow.shared.show()
             case "welcome": WelcomeWindow.shared.show()
             case "screenshots" where AppInfo.isDev: Task { await Screenshots.render() }
-            case "pause": store.isPaused = true
-            case "resume": store.isPaused = false
+            case "pause": store.isPaused = true; statusItem?.refreshIcon()
+            case "resume": store.isPaused = false; statusItem?.refreshIcon()
             default: break
             }
         }
@@ -137,40 +106,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.panel.hide()
             self.paster.paste(item, asPlainText: plain)
         }
-    }
-}
-
-struct MenuBarContent: View {
-    private var store: ClipStore { AppDelegate.shared.store }
-
-    var body: some View {
-        let items = Array(store.items.prefix(10))
-        let hotkey = HotkeyManager.label(keyCode: AppSettings.shared.hotkeyKeyCode, modifiers: AppSettings.shared.hotkeyModifiers)
-
-        if items.isEmpty {
-            Text("No history yet")
-        }
-        ForEach(items) { item in
-            Button {
-                AppDelegate.shared.paster.copy(item)
-            } label: {
-                if let thumb = AssetCache.menuThumbnail(for: item) {
-                    Label { Text(item.menuTitle) } icon: { Image(nsImage: thumb).renderingMode(.original) }
-                } else {
-                    Label(item.menuTitle, systemImage: item.kind.symbol)
-                }
-            }
-        }
-        Divider()
-        Button("Open History    \(hotkey)") { AppDelegate.shared.togglePanel() }
-        Button(store.isPaused ? "Resume Capture" : "Pause Capture") { store.isPaused.toggle() }
-        Divider()
-        if UpdaterManager.shared.isEnabled {
-            Button("Check for Updates…") { UpdaterManager.shared.checkForUpdates() }
-        }
-        SettingsLink { Text("Settings…") }
-            .keyboardShortcut(",")
-        Button("Quit Pastely") { NSApp.terminate(nil) }
-            .keyboardShortcut("q")
     }
 }

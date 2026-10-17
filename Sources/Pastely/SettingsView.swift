@@ -16,7 +16,6 @@ struct SettingsView: View {
         }
         .frame(width: 560, height: 440)
         .tint(Theme.accent)
-        .onAppear { NSApp.activate() }
     }
 }
 
