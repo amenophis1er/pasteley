@@ -2,5 +2,5 @@
 .swiftpm/
 *.xcodeproj
 build/
-Pasteley.app/
+Pastely.app/
 build/

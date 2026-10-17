@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: An idea for Pasteley
+about: An idea for Pastely
 labels: enhancement
 ---
 

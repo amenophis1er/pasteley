@@ -4,7 +4,7 @@ import Security
 
 /// AES-GCM at rest with a 256-bit key kept in the login keychain.
 enum Crypto {
-    private static let service = "com.amenophis.pasteley"
+    private static let service = "com.amenophis.pastely"
     private static let account = "history-key"
 
     nonisolated(unsafe) private static var cached: SymmetricKey?

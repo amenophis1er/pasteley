@@ -12,5 +12,5 @@ labels: bug
 
 **Environment**
 - macOS version:
-- Pasteley version (Settings → About):
+- Pastely version (Settings → About):
 - Source app, if the bug is about a specific copy or paste:

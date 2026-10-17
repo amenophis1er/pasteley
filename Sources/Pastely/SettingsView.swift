@@ -43,7 +43,7 @@ struct GeneralSettings: View {
                     }
                 }
             } footer: {
-                Text("Needed to paste into the front app after you pick an item. Without it, Pasteley copies the item and you paste with ⌘V.")
+                Text("Needed to paste into the front app after you pick an item. Without it, Pastely copies the item and you paste with ⌘V.")
                     .font(Theme.Text.caption).foregroundStyle(.secondary)
             }
         }
@@ -174,7 +174,7 @@ struct AboutSettings: View {
     var body: some View {
         VStack(spacing: Theme.Space.md) {
             Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 72, height: 72)
-            Text("Pasteley").font(Theme.Text.title)
+            Text("Pastely").font(Theme.Text.title)
             Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev")")
                 .font(Theme.Text.caption).foregroundStyle(.secondary)
             Text("A small, local-only clipboard manager.\nYour history never leaves this Mac.")

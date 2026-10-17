@@ -1,18 +1,18 @@
-# Pasteley release pipeline. `make help` lists targets.
+# Pastely release pipeline. `make help` lists targets.
 #
 # Local notarization needs a keychain profile once:
-#   xcrun notarytool store-credentials pasteley-notary --apple-id <id> --team-id L33ZEUXVN4 --password <app-specific password>
+#   xcrun notarytool store-credentials pastely-notary --apple-id <id> --team-id L33ZEUXVN4 --password <app-specific password>
 # CI passes APPLE_ID / DEVELOPMENT_TEAM / NOTARIZE_PASSWORD instead.
 
 .PHONY: help build test app release notarize dmg clean
 
 VERSION ?= $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Resources/Info.plist)
 BUILD_DIR := build
-RELEASE_APP := $(BUILD_DIR)/Pasteley.app
-ZIP := $(BUILD_DIR)/Pasteley-$(VERSION).zip
-DMG := $(BUILD_DIR)/Pasteley-$(VERSION).dmg
+RELEASE_APP := $(BUILD_DIR)/Pastely.app
+ZIP := $(BUILD_DIR)/Pastely-$(VERSION).zip
+DMG := $(BUILD_DIR)/Pastely-$(VERSION).dmg
 DEV_ID := $(shell security find-identity -v -p codesigning | grep -o '"Developer ID Application: [^"]*"' | head -1 | tr -d '"')
-NOTARY_PROFILE ?= pasteley-notary
+NOTARY_PROFILE ?= pastely-notary
 
 ifdef NOTARIZE_PASSWORD
 NOTARY_AUTH := --apple-id "$(APPLE_ID)" --team-id "$(DEVELOPMENT_TEAM)" --password "$(NOTARIZE_PASSWORD)"
@@ -29,10 +29,10 @@ build: ## Debug build
 test: ## Run unit tests
 	swift test
 
-app: ## Dev bundle at ./Pasteley.app, signed with the Apple Development cert
+app: ## Dev bundle at ./Pastely.app, signed with the Apple Development cert
 	./scripts/bundle.sh
 
-release: ## Release bundle at build/Pasteley.app, Developer ID signed with timestamp
+release: ## Release bundle at build/Pastely.app, Developer ID signed with timestamp
 	@test -n "$(DEV_ID)" || { echo "No Developer ID Application certificate found"; exit 1; }
 	mkdir -p $(BUILD_DIR)
 	APP_PATH="$(RELEASE_APP)" SIGN_IDENTITY="$(DEV_ID)" VERSION="$(VERSION)" ./scripts/bundle.sh
@@ -48,13 +48,13 @@ notarize: release ## Submit the release app to Apple, wait, staple
 dmg: ## Package the stapled app into a notarized drag-to-Applications DMG
 	rm -rf $(BUILD_DIR)/dmg-staging "$(DMG)"
 	mkdir -p $(BUILD_DIR)/dmg-staging
-	ditto "$(RELEASE_APP)" "$(BUILD_DIR)/dmg-staging/Pasteley.app"
+	ditto "$(RELEASE_APP)" "$(BUILD_DIR)/dmg-staging/Pastely.app"
 	ln -s /Applications "$(BUILD_DIR)/dmg-staging/Applications"
-	hdiutil create -volname "Pasteley" -srcfolder "$(BUILD_DIR)/dmg-staging" -ov -format UDZO "$(DMG)"
+	hdiutil create -volname "Pastely" -srcfolder "$(BUILD_DIR)/dmg-staging" -ov -format UDZO "$(DMG)"
 	codesign --force --timestamp --sign "$(DEV_ID)" "$(DMG)"
 	xcrun notarytool submit "$(DMG)" $(NOTARY_AUTH) --wait
 	xcrun stapler staple "$(DMG)"
 	@echo "Built $(DMG)"; shasum -a 256 "$(DMG)"
 
 clean: ## Remove build outputs
-	rm -rf $(BUILD_DIR) Pasteley.app .build
+	rm -rf $(BUILD_DIR) Pastely.app .build

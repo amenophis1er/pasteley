@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Pasteley
+@testable import Pastely
 
 @MainActor
 struct ClipStoreTests {

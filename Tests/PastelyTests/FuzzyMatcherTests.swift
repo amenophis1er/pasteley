@@ -1,5 +1,5 @@
 import Testing
-@testable import Pasteley
+@testable import Pastely
 
 struct FuzzyMatcherTests {
     @Test func matchesSubsequence() {

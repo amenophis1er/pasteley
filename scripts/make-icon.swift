@@ -1,4 +1,4 @@
-// Renders the Pasteley app icon: a rounded gradient tile with a clipboard glyph.
+// Renders the Pastely app icon: a rounded gradient tile with a clipboard glyph.
 // Usage: swift scripts/make-icon.swift Resources
 import AppKit
 

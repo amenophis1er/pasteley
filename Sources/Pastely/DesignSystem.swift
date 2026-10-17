@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Pasteley's small design system. Everything visual reads from here so the
+/// Pastely's small design system. Everything visual reads from here so the
 /// panel, settings and menu share one voice.
 enum Theme {
     enum Space {
@@ -33,7 +33,7 @@ enum Theme {
             : NSColor(calibratedRed: 0.33, green: 0.39, blue: 0.96, alpha: 1)
     })
 
-    /// Soft wash laid over the material so the panel reads as Pasteley, not as a system sheet.
+    /// Soft wash laid over the material so the panel reads as Pastely, not as a system sheet.
     static var wash: some View {
         LinearGradient(colors: [accent.opacity(0.14), accent.opacity(0.03), .clear],
                        startPoint: .top, endPoint: .bottom)

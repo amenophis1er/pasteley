@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds a release binary and wraps it into Pasteley.app at the repo root.
+# Builds a release binary and wraps it into Pastely.app at the repo root.
 #
 # Signing: the keychain remembers "Always Allow" per code identity, and an ad-hoc
 # signature changes on every build. So we sign with a stable identity by default:
@@ -7,10 +7,10 @@
 set -eu
 cd "$(dirname "$0")/.."
 swift build -c release
-APP="${APP_PATH:-Pasteley.app}"
+APP="${APP_PATH:-Pastely.app}"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS"
-cp .build/release/Pasteley "$APP/Contents/MacOS/Pasteley"
+cp .build/release/Pastely "$APP/Contents/MacOS/Pastely"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 # Stamp the version when VERSION is set (CI sets it from the tag).
 if [ -n "${VERSION:-}" ]; then

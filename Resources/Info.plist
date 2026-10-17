@@ -2,20 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleName</key><string>Pasteley</string>
-    <key>CFBundleDisplayName</key><string>Pasteley</string>
-    <key>CFBundleIdentifier</key><string>com.amenophis.pasteley</string>
+    <key>CFBundleName</key><string>Pastely</string>
+    <key>CFBundleDisplayName</key><string>Pastely</string>
+    <key>CFBundleIdentifier</key><string>com.amenophis.pastely</string>
     <key>CFBundleVersion</key><string>1</string>
     <key>CFBundleShortVersionString</key><string>0.1.0</string>
-    <key>CFBundleExecutable</key><string>Pasteley</string>
+    <key>CFBundleExecutable</key><string>Pastely</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>LSMinimumSystemVersion</key><string>15.0</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>
-            <key>CFBundleURLName</key><string>com.amenophis.pasteley</string>
-            <key>CFBundleURLSchemes</key><array><string>pasteley</string></array>
+            <key>CFBundleURLName</key><string>com.amenophis.pastely</string>
+            <key>CFBundleURLSchemes</key><array><string>pastely</string></array>
         </dict>
     </array>
     <key>LSUIElement</key><true/>

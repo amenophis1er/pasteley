@@ -41,7 +41,7 @@ final class AppSettings {
             do {
                 if newValue { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
             } catch {
-                NSLog("Pasteley: launch at login failed: \(error)")
+                NSLog("Pastely: launch at login failed: \(error)")
             }
         }
     }

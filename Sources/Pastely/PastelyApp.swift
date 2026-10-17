@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct PasteleyApp: App {
+struct PastelyApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     var body: some Scene {
@@ -17,7 +17,7 @@ struct PasteleyApp: App {
 }
 
 extension Notification.Name {
-    static let pasteleyOpenSettings = Notification.Name("PasteleyOpenSettings")
+    static let pastelyOpenSettings = Notification.Name("PastelyOpenSettings")
 }
 
 struct MenuBarIcon: View {
@@ -26,7 +26,7 @@ struct MenuBarIcon: View {
     var body: some View {
         let paused = AppDelegate.shared?.store.isPaused ?? false
         Image(nsImage: paused ? MenuBarGlyph.paused : MenuBarGlyph.normal)
-            .onReceive(NotificationCenter.default.publisher(for: .pasteleyOpenSettings)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .pastelyOpenSettings)) { _ in
                 NSApp.activate()
                 openSettings()
             }
@@ -45,7 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     override init() {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Pasteley", isDirectory: true)
+            .appendingPathComponent("Pastely", isDirectory: true)
         try? FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
         store = try! ClipStore(path: support.appendingPathComponent("history.sqlite").path)
         watcher = PasteboardWatcher(store: store)
@@ -61,14 +61,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         registerHotkey()
     }
 
-    /// `pasteley://history` toggles the panel, `pasteley://settings` opens settings.
+    /// `pastely://history` toggles the panel, `pastely://settings` opens settings.
     /// Handy for Raycast, Alfred or a shell alias.
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
             switch url.host {
             case "history": togglePanel()
             case "settings":
-                NotificationCenter.default.post(name: .pasteleyOpenSettings, object: nil)
+                NotificationCenter.default.post(name: .pastelyOpenSettings, object: nil)
             case "pause": store.isPaused = true
             case "resume": store.isPaused = false
             default: break
@@ -122,7 +122,7 @@ struct MenuBarContent: View {
         Divider()
         SettingsLink { Text("Settings…") }
             .keyboardShortcut(",")
-        Button("Quit Pasteley") { NSApp.terminate(nil) }
+        Button("Quit Pastely") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }
 }
