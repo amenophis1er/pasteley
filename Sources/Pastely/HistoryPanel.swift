@@ -134,8 +134,25 @@ final class HistoryViewModel {
     var filter: HistoryFilter = .all
     var selection: Int64?
     var onSelect: ((ClipItem, Bool) -> Void)?
+    /// Refreshed each time the panel opens; drives the footer warning.
+    var canPaste = true
+
+    @ObservationIgnored private var lastClick: (id: Int64, at: Date)?
 
     init(store: ClipStore) { self.store = store }
+
+    /// Single click selects; a second click on the same row within the system
+    /// double-click interval pastes. Tracked here so it does not depend on NSEvent.
+    func click(_ id: Int64) {
+        selection = id
+        let now = Date()
+        if let last = lastClick, last.id == id, now.timeIntervalSince(last.at) <= NSEvent.doubleClickInterval {
+            lastClick = nil
+            choose()
+        } else {
+            lastClick = (id, now)
+        }
+    }
 
     /// Search is memoized: the list, rows and footer all read this several times
     /// per render, and fuzzy matching 500 items each time is what made selection lag.
@@ -165,6 +182,7 @@ final class HistoryViewModel {
         query = ""
         filter = .all
         selection = store.items.first?.id
+        canPaste = Paster.isTrusted()
     }
 
     func move(_ delta: Int) {
@@ -354,11 +372,8 @@ struct HistoryView: View {
                                 .contentShape(Rectangle())
                                 // One handler, no double-tap recognizer: a second recognizer makes
                                 // SwiftUI hold every single click until the double-click interval
-                                // passes. AppKit already counts clicks for us.
-                                .onTapGesture {
-                                    model.selection = item.id
-                                    if NSApp.currentEvent?.clickCount == 2 { model.choose() }
-                                }
+                                // passes. The model counts clicks itself.
+                                .onTapGesture { model.click(item.id) }
                                 .contextMenu {
                                     Button("Paste") { model.selection = item.id; model.choose() }
                                     if item.kind == .image {
@@ -391,6 +406,21 @@ struct HistoryView: View {
     /// The one-time tip sits above the keyboard hints, never in place of them.
     private var footer: some View {
         VStack(spacing: 0) {
+            if !model.canPaste {
+                HStack(spacing: Theme.Space.sm) {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                    Text("Pastely can't paste into other apps yet. Return will copy instead.")
+                    Spacer()
+                    Button("Grant Accessibility…") { Paster.requestAccessibility() }
+                        .controlSize(.small)
+                }
+                .font(Theme.Text.caption)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, Theme.Space.lg)
+                .padding(.vertical, Theme.Space.sm)
+                .background(Color.orange.opacity(0.10))
+                Divider()
+            }
             if AppSettings.shared.showFirstUseTip {
                 HStack(spacing: Theme.Space.sm) {
                     Image(systemName: "sparkles").foregroundStyle(Theme.accent)

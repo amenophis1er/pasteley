@@ -57,7 +57,9 @@ final class Paster {
 
     func paste(_ item: ClipItem, asPlainText: Bool = false) {
         guard copy(item, asPlainText: asPlainText) else { return }
-        guard Self.ensureAccessibility() else { return }
+        // Without the permission the item is on the pasteboard; the panel footer explains
+        // what is missing, so no system prompt is forced here.
+        guard Self.isTrusted() else { return }
         previousApp?.activate()
         // Give the target app one run loop turn to become key before the keystroke lands.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {

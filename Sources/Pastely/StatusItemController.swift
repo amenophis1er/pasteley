@@ -34,7 +34,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             menu.addItem(none)
         }
         for item in items {
-            let row = NSMenuItem(title: item.menuTitle, action: #selector(copyItem(_:)), keyEquivalent: "")
+            let row = NSMenuItem(title: item.menuTitle, action: #selector(pasteItem(_:)), keyEquivalent: "")
             row.target = self
             row.representedObject = item
             // Kind glyphs only; the hover card shows the actual thumbnail at a useful size.
@@ -87,9 +87,12 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     // MARK: Actions
 
-    @objc private func copyItem(_ sender: NSMenuItem) {
+    /// Click pastes into the app that was in front (the menu never activates us).
+    /// Without Accessibility this degrades to a copy, and the panel explains why.
+    @objc private func pasteItem(_ sender: NSMenuItem) {
         guard let clip = sender.representedObject as? ClipItem else { return }
-        AppDelegate.shared.paster.copy(clip)
+        AppDelegate.shared.paster.rememberFrontApp()
+        AppDelegate.shared.paster.paste(clip)
     }
 
     @objc private func openHistory() { AppDelegate.shared.togglePanel() }
