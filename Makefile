@@ -45,7 +45,7 @@ notarize: release ## Submit the release app to Apple, wait, staple
 	xcrun stapler staple "$(RELEASE_APP)"
 	spctl --assess --type execute --verbose=2 "$(RELEASE_APP)"
 
-dmg: ## Package the stapled app into a notarized drag-to-Applications DMG
+dmg: notarize ## Package the stapled app into a notarized drag-to-Applications DMG
 	rm -rf $(BUILD_DIR)/dmg-staging "$(DMG)"
 	mkdir -p $(BUILD_DIR)/dmg-staging
 	ditto "$(RELEASE_APP)" "$(BUILD_DIR)/dmg-staging/Pastely.app"
