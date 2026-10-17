@@ -13,7 +13,7 @@ enum CryptoError: Error, Equatable {
 /// Fails closed: if the key cannot be loaded or persisted, or sealing fails, callers get an
 /// error and must not write. Plaintext never reaches the database by accident.
 enum Crypto {
-    private static let service = "com.amenophis.pastely"
+    private static let service = Bundle.main.bundleIdentifier ?? "com.amenophis.pastely"
     private static let account = "history-key"
 
     /// Where the key comes from. Tests swap this for an ephemeral key so they never touch the real keychain.

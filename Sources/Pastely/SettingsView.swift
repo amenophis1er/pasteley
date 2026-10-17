@@ -189,8 +189,9 @@ struct AboutSettings: View {
         VStack(spacing: Theme.Space.md) {
             Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 72, height: 72)
             Text("Pastely").font(Theme.Text.title)
-            Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev")")
+            Text(AppInfo.versionLine)
                 .font(Theme.Text.caption).foregroundStyle(.secondary)
+                .textSelection(.enabled)
             Text("A small, local-only clipboard manager.\nYour history never leaves this Mac.")
                 .font(Theme.Text.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
             Spacer()

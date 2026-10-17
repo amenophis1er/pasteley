@@ -47,7 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     override init() {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Pastely", isDirectory: true)
+            .appendingPathComponent(AppInfo.isDev ? "Pastely Dev" : "Pastely", isDirectory: true)
         try? FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
         store = try! ClipStore(path: support.appendingPathComponent("history.sqlite").path)
         watcher = PasteboardWatcher(store: store)

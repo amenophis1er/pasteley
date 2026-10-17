@@ -35,7 +35,7 @@ app: ## Dev bundle at build.noindex/dev/Pastely.app, signed with the Apple Devel
 release: ## Release bundle at build.noindex/Pastely.app, Developer ID signed with timestamp
 	@test -n "$(DEV_ID)" || { echo "No Developer ID Application certificate found"; exit 1; }
 	mkdir -p $(BUILD_DIR)
-	APP_PATH="$(RELEASE_APP)" SIGN_IDENTITY="$(DEV_ID)" VERSION="$(VERSION)" ./scripts/bundle.sh
+	APP_PATH="$(RELEASE_APP)" SIGN_IDENTITY="$(DEV_ID)" VERSION="$(VERSION)" PASTELY_DEV=0 ./scripts/bundle.sh
 	codesign --verify --deep --strict --verbose=2 "$(RELEASE_APP)"
 
 notarize: release ## Submit the release app to Apple, wait, staple
