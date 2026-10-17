@@ -252,6 +252,7 @@ struct AboutSettings: View {
                 .font(Theme.Text.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
             Spacer()
             HStack(spacing: Theme.Space.md) {
+                Button("Report a Problem…") { ReportWindow.shared.show() }
                 Button("Show Welcome Screen") { WelcomeWindow.shared.show() }
                 Link("pastely.amenophis.dev", destination: URL(string: "https://pastely.amenophis.dev")!)
                 Link("GitHub", destination: URL(string: "https://github.com/amenophis1er/pastely")!)

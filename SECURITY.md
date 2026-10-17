@@ -13,6 +13,7 @@ Pastely stores your clipboard history. That makes it sensitive software, so here
 ## What it does not do
 
 - No network access, with one exception: the release build checks GitHub for updates through Sparkle, once a day, and downloads a new DMG only when you accept. Updates are EdDSA-signed and the feed is served from this repository's releases. You can turn automatic checks off in Settings, General. Nothing about your history is sent; the request carries only the app version and macOS version. Dev builds have no update feed at all.
+- One more request exists, and only when you ask for it: "Report a Problem" in Settings, About, sends your description, an optional email and the diagnostics shown in the sheet (version, macOS version, permission state, settings) to pastely.amenophis.dev, which files a public GitHub issue. Nothing from your clipboard history is included.
 - No sandbox: pasting into the front app requires the Accessibility permission, which the App Sandbox blocks.
 - No telemetry, no crash reporting, no analytics.
 
