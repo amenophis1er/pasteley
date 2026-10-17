@@ -6,7 +6,7 @@ A small, local-only clipboard manager for macOS. Menu bar app, one hotkey, searc
 
 ```sh
 swift build && .build/debug/Pastely     # dev run (no bundle, no Dock icon)
-./scripts/bundle.sh && open Pastely.app  # app bundle, ad-hoc signed
+./scripts/bundle.sh && open build.noindex/dev/Pastely.app  # dev bundle, Apple Development signed
 swift test
 ```
 

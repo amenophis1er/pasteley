@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds a release binary and wraps it into Pastely.app at the repo root.
+# Builds a release binary and wraps it into an app bundle under build.noindex/ (kept out of Spotlight).
 #
 # Signing: the keychain remembers "Always Allow" per code identity, and an ad-hoc
 # signature changes on every build. So we sign with a stable identity by default:
@@ -7,8 +7,8 @@
 set -eu
 cd "$(dirname "$0")/.."
 swift build -c release
-APP="${APP_PATH:-Pastely.app}"
-rm -rf "$APP"
+APP="${APP_PATH:-build.noindex/dev/Pastely.app}"
+rm -rf "$APP" && mkdir -p "$(dirname "$APP")"
 mkdir -p "$APP/Contents/MacOS"
 cp .build/release/Pastely "$APP/Contents/MacOS/Pastely"
 cp Resources/Info.plist "$APP/Contents/Info.plist"

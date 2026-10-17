@@ -1,6 +1,5 @@
 .build/
 .swiftpm/
 *.xcodeproj
-build/
-Pastely.app/
-build/
+build.noindex/
+

@@ -7,7 +7,7 @@
 .PHONY: help build test app release notarize dmg clean
 
 VERSION ?= $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Resources/Info.plist)
-BUILD_DIR := build
+BUILD_DIR := build.noindex
 RELEASE_APP := $(BUILD_DIR)/Pastely.app
 ZIP := $(BUILD_DIR)/Pastely-$(VERSION).zip
 DMG := $(BUILD_DIR)/Pastely-$(VERSION).dmg
@@ -29,13 +29,12 @@ build: ## Debug build
 test: ## Run unit tests
 	swift test
 
-app: ## Dev bundle at ./Pastely.app, signed with the Apple Development cert
+app: ## Dev bundle at build.noindex/dev/Pastely.app, signed with the Apple Development cert
 	./scripts/bundle.sh
 
-release: ## Release bundle at build/Pastely.app, Developer ID signed with timestamp
+release: ## Release bundle at build.noindex/Pastely.app, Developer ID signed with timestamp
 	@test -n "$(DEV_ID)" || { echo "No Developer ID Application certificate found"; exit 1; }
 	mkdir -p $(BUILD_DIR)
-	touch $(BUILD_DIR)/.metadata_never_index
 	APP_PATH="$(RELEASE_APP)" SIGN_IDENTITY="$(DEV_ID)" VERSION="$(VERSION)" ./scripts/bundle.sh
 	codesign --verify --deep --strict --verbose=2 "$(RELEASE_APP)"
 
