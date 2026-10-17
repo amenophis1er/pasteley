@@ -74,7 +74,7 @@ The dev bundle is `Pastely Dev` with bundle id `com.amenophis.pastely.dev`. It h
 
 ## Release
 
-Tag a commit and push it. CI builds, signs, notarizes, packages the DMG, signs it for Sparkle and publishes a GitHub Release with the appcast.
+Add a section for the version to `CHANGELOG.md`, then tag and push. CI refuses to release without notes. It builds, signs, notarizes, packages the DMG, signs it for Sparkle and publishes a GitHub Release whose notes, and the in-app update dialog, come from that changelog section.
 
 ```sh
 git tag v0.1.0 && git push origin v0.1.0

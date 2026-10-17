@@ -49,6 +49,9 @@ jobs:
           security find-identity -v -p codesigning "$KEYCHAIN"
           rm -f "$RUNNER_TEMP/cert.p12"
 
+      - name: Release notes must exist
+        run: python3 scripts/release-notes.py "${{ steps.v.outputs.version }}" > "$RUNNER_TEMP/notes.md" && cat "$RUNNER_TEMP/notes.md"
+
       - name: Test
         run: swift test
 
@@ -89,7 +92,7 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" \
             --title "Pastely $VERSION" \
-            --generate-notes \
+            --notes-file "$RUNNER_TEMP/notes.md" \
             "build.noindex/Pastely-$VERSION.dmg" \
             "build.noindex/Pastely-$VERSION.dmg.sha256" \
             build.noindex/appcast.xml
