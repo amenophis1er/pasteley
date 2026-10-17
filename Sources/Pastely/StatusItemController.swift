@@ -51,25 +51,26 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             menu.addItem(reveal)
         }
         menu.addItem(.separator())
-        let open = NSMenuItem(title: "Open History", action: #selector(openHistory), keyEquivalent: "v")
+        // Every action row carries a glyph: macOS adds one to "Settings…" by itself,
+        // and a half-iconed section misaligns the titles.
+        let open = action("Open History", symbol: "clock.arrow.circlepath", #selector(openHistory), key: "v")
         open.keyEquivalentModifierMask = [.command, .shift]
-        open.target = self
         menu.addItem(open)
-        let pause = NSMenuItem(title: store.isPaused ? "Resume Capture" : "Pause Capture", action: #selector(togglePause), keyEquivalent: "")
-        pause.target = self
-        menu.addItem(pause)
+        menu.addItem(action(store.isPaused ? "Resume Capture" : "Pause Capture",
+                            symbol: store.isPaused ? "play.circle" : "pause.circle", #selector(togglePause)))
         menu.addItem(.separator())
         if UpdaterManager.shared.isEnabled {
-            let update = NSMenuItem(title: "Check for Updates…", action: #selector(checkUpdates), keyEquivalent: "")
-            update.target = self
-            menu.addItem(update)
+            menu.addItem(action("Check for Updates…", symbol: "arrow.down.circle", #selector(checkUpdates)))
         }
-        let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
-        settings.target = self
-        menu.addItem(settings)
-        let quit = NSMenuItem(title: AppInfo.isDev ? "Quit Pastely Dev" : "Quit Pastely", action: #selector(quit), keyEquivalent: "q")
-        quit.target = self
-        menu.addItem(quit)
+        menu.addItem(action("Settings…", symbol: "gearshape", #selector(openSettings), key: ","))
+        menu.addItem(action(AppInfo.isDev ? "Quit Pastely Dev" : "Quit Pastely", symbol: "power", #selector(quit), key: "q"))
+    }
+
+    private func action(_ title: String, symbol: String, _ selector: Selector, key: String = "") -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: selector, keyEquivalent: key)
+        item.target = self
+        item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        return item
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
