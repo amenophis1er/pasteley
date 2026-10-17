@@ -369,7 +369,34 @@ struct HistoryView: View {
         }
     }
 
+    @ViewBuilder
     private var footer: some View {
+        if AppSettings.shared.showFirstUseTip {
+            HStack(spacing: Theme.Space.sm) {
+                Image(systemName: "sparkles").foregroundStyle(Theme.accent)
+                Text("Pastely lives in your menu bar. Press ")
+                    + Text(hotkeyLabel).bold()
+                    + Text(" anytime to open this.")
+                Spacer()
+                Button("Got it") { AppSettings.shared.showFirstUseTip = false }
+                    .controlSize(.small)
+            }
+            .font(Theme.Text.caption)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, Theme.Space.lg)
+            .padding(.vertical, Theme.Space.sm)
+            .background(Theme.accent.opacity(0.08))
+        } else {
+            hints
+        }
+    }
+
+    private var hotkeyLabel: String {
+        HotkeyManager.Modifiers(rawValue: AppSettings.shared.hotkeyModifiers).symbols
+            + HotkeyManager.keyName(AppSettings.shared.hotkeyKeyCode)
+    }
+
+    private var hints: some View {
         HStack(spacing: Theme.Space.lg) {
             KeyHint(keys: "↩", label: "Paste")
             KeyHint(keys: "⇧↩", label: model.selectedItem?.kind == .image ? "Paste text" : "Plain text")

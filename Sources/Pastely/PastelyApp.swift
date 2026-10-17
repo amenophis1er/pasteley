@@ -82,6 +82,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let s = AppSettings.shared
         hotkey = nil
         hotkey = HotkeyManager(keyCode: s.hotkeyKeyCode, modifiers: .init(rawValue: s.hotkeyModifiers)) { [weak self] in
+            AppSettings.shared.showFirstUseTip = false // they found the hotkey; the tip has done its job
             self?.togglePanel()
         }
     }

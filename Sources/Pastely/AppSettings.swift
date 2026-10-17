@@ -19,6 +19,8 @@ final class AppSettings {
     var captureImages: Bool { didSet { defaults.set(captureImages, forKey: "captureImages") } }
     var ocrImages: Bool { didSet { defaults.set(ocrImages, forKey: "ocrImages") } }
     var didOnboard: Bool { didSet { defaults.set(didOnboard, forKey: "didOnboard") } }
+    /// One-time hint in the panel footer after onboarding, cleared on the first paste or hotkey use.
+    var showFirstUseTip: Bool { didSet { defaults.set(showFirstUseTip, forKey: "showFirstUseTip") } }
 
     static let defaultIgnoredApps = ["com.apple.keychainaccess", "com.apple.Passwords"]
 
@@ -33,6 +35,7 @@ final class AppSettings {
         captureImages = defaults.object(forKey: "captureImages") as? Bool ?? true
         ocrImages = defaults.object(forKey: "ocrImages") as? Bool ?? true
         didOnboard = defaults.bool(forKey: "didOnboard")
+        showFirstUseTip = defaults.bool(forKey: "showFirstUseTip")
     }
 
     // MARK: Launch at login

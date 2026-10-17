@@ -27,7 +27,7 @@ final class WelcomeWindow {
         w.isReleasedWhenClosed = false
         // Follow the user: granting Accessibility sends them to System Settings on another Space.
         w.collectionBehavior = [.moveToActiveSpace]
-        w.contentView = NSHostingView(rootView: WelcomeView { [weak self] in self?.close() })
+        w.contentView = NSHostingView(rootView: WelcomeView { [weak self] in self?.finish() })
         w.center()
         window = w
         w.makeKeyAndOrderFront(nil)
@@ -38,6 +38,16 @@ final class WelcomeWindow {
         AppSettings.shared.didOnboard = true
         window?.close()
         window = nil
+    }
+
+    /// "Open My History": close the welcome and show the panel so people see where the app lives.
+    func finish() {
+        AppSettings.shared.showFirstUseTip = true
+        close()
+        NSApp.deactivate()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            AppDelegate.shared.togglePanel()
+        }
     }
 }
 
@@ -146,7 +156,7 @@ struct WelcomeView: View {
             .font(Theme.Text.caption)
             .foregroundStyle(.secondary)
             Button(action: onDone) {
-                Text("Get Started")
+                Text("Open My History")
                     .font(Theme.Text.body.weight(.semibold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
