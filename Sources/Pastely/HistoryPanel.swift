@@ -51,6 +51,7 @@ final class HistoryPanel {
         model.query = ""
         model.filter = .all
         model.selection = id
+        model.scrollTarget = id
     }
 
     /// Below the caret or focused field when known, else centred on the mouse's screen.
@@ -136,6 +137,9 @@ final class HistoryViewModel {
     var onSelect: ((ClipItem, Bool) -> Void)?
     /// Refreshed each time the panel opens; drives the footer warning.
     var canPaste = true
+    /// Row to scroll into view. Set by keyboard navigation and programmatic selection,
+    /// never by a mouse click: scrolling under the cursor breaks double-click.
+    var scrollTarget: Int64?
 
     @ObservationIgnored private var lastClick: (id: Int64, at: Date)?
 
@@ -190,6 +194,7 @@ final class HistoryViewModel {
         guard !list.isEmpty else { return }
         let idx = list.firstIndex { $0.id == selection } ?? -1
         selection = list[max(0, min(list.count - 1, idx + delta))].id
+        scrollTarget = selection
     }
 
     func cycleFilter(_ delta: Int) {
@@ -201,6 +206,7 @@ final class HistoryViewModel {
 
     func reselect() {
         if selectedItem == nil { selection = results.first?.id }
+        scrollTarget = selection
     }
 
     func choose(plain: Bool = false) {
@@ -296,7 +302,7 @@ struct HistoryView: View {
                     .onKeyPress(.escape) { AppDelegate.shared.panel.hide(); return .handled }
                     .onKeyPress(.tab) { model.cycleFilter(1); return .handled }
                     .onKeyPress(phases: .down) { press in handle(press) }
-                    .onChange(of: model.query) { _, _ in model.selection = model.results.first?.id }
+                    .onChange(of: model.query) { _, _ in model.selection = model.results.first?.id; model.scrollTarget = model.selection }
                 if !model.query.isEmpty {
                     Button { model.query = "" } label: {
                         Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary)
@@ -396,8 +402,8 @@ struct HistoryView: View {
                     .padding(.horizontal, Theme.Space.sm)
                     .padding(.vertical, Theme.Space.xs)
                 }
-                .onChange(of: model.selection) { _, id in
-                    if let id { withAnimation(.easeOut(duration: 0.12)) { proxy.scrollTo(id, anchor: .center) } }
+                .onChange(of: model.scrollTarget) { _, id in
+                    if let id { proxy.scrollTo(id, anchor: .center) }
                 }
             }
         }
