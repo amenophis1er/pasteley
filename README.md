@@ -2,7 +2,11 @@
 
 A small, local-only clipboard manager for macOS. Menu bar app, one hotkey, searchable history for text, rich text, images and files. Nothing leaves the Mac.
 
-## Run
+## Install
+
+Download the latest `Pastely-x.y.z.dmg` from [Releases](https://github.com/amenophis1er/pastely/releases/latest), open it and drag Pastely to Applications. The app is signed with a Developer ID and notarized by Apple.
+
+## Run from source
 
 ```sh
 swift build && .build/debug/Pastely     # dev run (no bundle, no Dock icon)
@@ -28,6 +32,16 @@ swift test
 | `Sources/Pastely/ClipStore.swift` | SQLite + AES-GCM history |
 | `Sources/Pastely/PasteboardWatcher.swift` | Capture and privacy filters |
 | `scripts/make-icon.swift` | Regenerates `Resources/AppIcon.icns` |
+
+## Releasing
+
+Tag a commit and push it. CI builds, signs, notarizes and publishes the DMG to GitHub Releases:
+
+```sh
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+Locally, `make dmg` does the same with your Developer ID certificate and the `pastely-notary` keychain profile.
 
 Default hotkey: Cmd+Shift+V. Pasting into the front app needs Accessibility permission, which macOS prompts for on first paste.
 

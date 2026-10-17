@@ -1,0 +1,80 @@
+name: Release
+
+# Tag a commit `vX.Y.Z` and this builds, signs, notarizes and publishes the DMG.
+#
+# Secrets:
+#   MACOS_CERTIFICATE            base64 of the Developer ID Application .p12
+#   MACOS_CERTIFICATE_PASSWORD   password used when exporting that .p12
+#   APPLE_ID                     Apple ID that owns the developer account
+#   DEVELOPMENT_TEAM             team id, e.g. L33ZEUXVN4
+#   NOTARIZE_PASSWORD            app-specific password for notarytool
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build, notarize, publish
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.app || sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+
+      - name: Version from tag
+        id: v
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Import Developer ID certificate
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          set -eu
+          KEYCHAIN="$RUNNER_TEMP/release.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -P "$MACOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
+          security find-identity -v -p codesigning "$KEYCHAIN"
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+      - name: Test
+        run: swift test
+
+      - name: Build, notarize and package DMG
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+          NOTARIZE_PASSWORD: ${{ secrets.NOTARIZE_PASSWORD }}
+        run: make dmg VERSION="$VERSION"
+
+      - name: Checksum
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          cd build.noindex
+          shasum -a 256 "Pastely-$VERSION.dmg" > "Pastely-$VERSION.dmg.sha256"
+          cat "Pastely-$VERSION.dmg.sha256"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "Pastely $VERSION" \
+            --generate-notes \
+            "build.noindex/Pastely-$VERSION.dmg" \
+            "build.noindex/Pastely-$VERSION.dmg.sha256"
