@@ -84,6 +84,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             case "settings":
                 NotificationCenter.default.post(name: .pastelyOpenSettings, object: nil)
             case "welcome": WelcomeWindow.shared.show()
+            case "screenshots" where AppInfo.isDev: Task { await Screenshots.render() }
             case "pause": store.isPaused = true
             case "resume": store.isPaused = false
             default: break

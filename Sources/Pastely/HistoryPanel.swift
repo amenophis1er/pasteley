@@ -242,8 +242,12 @@ struct HistoryView: View {
         .background {
             ZStack {
                 // Thick material plus a near-solid base: readable over bright pages, still a hint of blur.
-                Rectangle().fill(.thickMaterial)
-                Rectangle().fill(Color(nsColor: .windowBackgroundColor).opacity(0.72))
+                if Screenshots.isRendering {
+                    Rectangle().fill(Color(nsColor: .windowBackgroundColor))
+                } else {
+                    Rectangle().fill(.thickMaterial)
+                    Rectangle().fill(Color(nsColor: .windowBackgroundColor).opacity(0.72))
+                }
                 Theme.wash
             }
         }

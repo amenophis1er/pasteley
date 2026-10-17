@@ -2,12 +2,17 @@ import AppKit
 import SwiftUI
 
 struct SettingsView: View {
+    enum Tab: Hashable { case general, history, privacy, about }
+    @State private var tab: Tab
+
+    init(initialTab: Tab = .general) { _tab = State(initialValue: initialTab) }
+
     var body: some View {
-        TabView {
-            GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }
-            HistorySettings().tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
-            PrivacySettings().tabItem { Label("Privacy", systemImage: "hand.raised") }
-            AboutSettings().tabItem { Label("About", systemImage: "info.circle") }
+        TabView(selection: $tab) {
+            GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }.tag(Tab.general)
+            HistorySettings().tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag(Tab.history)
+            PrivacySettings().tabItem { Label("Privacy", systemImage: "hand.raised") }.tag(Tab.privacy)
+            AboutSettings().tabItem { Label("About", systemImage: "info.circle") }.tag(Tab.about)
         }
         .frame(width: 560, height: 440)
         .tint(Theme.accent)
@@ -19,9 +24,9 @@ struct SettingsView: View {
 
 struct GeneralSettings: View {
     @Bindable private var settings = AppSettings.shared
-    @State private var accessibility = Paster.isTrusted()
-    @State private var launchAtLogin = AppSettings.shared.launchAtLogin
-    @State private var autoUpdate = UpdaterManager.shared.automaticallyChecks
+    @State private var accessibility = Screenshots.isRendering || Paster.isTrusted()
+    @State private var launchAtLogin = Screenshots.isRendering || AppSettings.shared.launchAtLogin
+    @State private var autoUpdate = Screenshots.isRendering || UpdaterManager.shared.automaticallyChecks
     private let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -48,12 +53,12 @@ struct GeneralSettings: View {
                     .font(Theme.Text.caption).foregroundStyle(.secondary)
             }
             Section("Updates") {
-                if UpdaterManager.shared.isEnabled {
+                if UpdaterManager.shared.isEnabled || Screenshots.isRendering {
                     Toggle("Check for updates automatically", isOn: $autoUpdate)
                         .onChange(of: autoUpdate) { _, on in UpdaterManager.shared.automaticallyChecks = on }
                     LabeledContent(AppInfo.versionLine) {
                         Button("Check Now") { UpdaterManager.shared.checkForUpdates() }
-                            .disabled(!UpdaterManager.shared.canCheck)
+                            .disabled(!UpdaterManager.shared.canCheck && !Screenshots.isRendering)
                     }
                 } else {
                     LabeledContent(AppInfo.versionLine) {
@@ -65,7 +70,7 @@ struct GeneralSettings: View {
         .formStyle(.grouped)
         .onChange(of: settings.hotkeyKeyCode) { _, _ in AppDelegate.shared.registerHotkey() }
         .onChange(of: settings.hotkeyModifiers) { _, _ in AppDelegate.shared.registerHotkey() }
-        .onReceive(timer) { _ in accessibility = Paster.isTrusted() }
+        .onReceive(timer) { _ in if !Screenshots.isRendering { accessibility = Paster.isTrusted() } }
     }
 }
 

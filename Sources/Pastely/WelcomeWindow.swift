@@ -56,8 +56,8 @@ final class WelcomeWindow {
 struct WelcomeView: View {
     let onDone: () -> Void
     @Bindable private var settings = AppSettings.shared
-    @State private var accessibility = Paster.isTrusted()
-    @State private var launchAtLogin = AppSettings.shared.launchAtLogin
+    @State private var accessibility = Screenshots.isRendering || Paster.isTrusted()
+    @State private var launchAtLogin = Screenshots.isRendering || AppSettings.shared.launchAtLogin
     private let poll = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -160,11 +160,12 @@ struct WelcomeView: View {
             Button(action: onDone) {
                 Text("Open My History")
                     .font(Theme.Text.body.weight(.semibold))
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 11)
+                    .background(Theme.accentStrong, in: RoundedRectangle(cornerRadius: Theme.Radius.md))
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .buttonStyle(.plain)
             .keyboardShortcut(.defaultAction)
         }
         .padding(.horizontal, Theme.Space.xl)

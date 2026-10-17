@@ -9,5 +9,8 @@ enum AppInfo {
     static let commit = Bundle.main.infoDictionary?["PastelyCommit"] as? String ?? "unknown"
 
     /// "Version 0.1.0 (42) · a1b2c3d"
-    static var versionLine: String { "Version \(version) (\(build)) · \(commit)" }
+    static var versionLine: String {
+        if Screenshots.isRendering { return "Version \(version.replacingOccurrences(of: "-dev", with: "")) (\(build)) · \(commit)" }
+        return "Version \(version) (\(build)) · \(commit)"
+    }
 }

@@ -33,6 +33,9 @@ enum Theme {
             : NSColor(calibratedRed: 0.33, green: 0.39, blue: 0.96, alpha: 1)
     })
 
+    /// Saturated indigo for filled controls, the same in both appearances so a primary button never looks disabled.
+    static let accentStrong = Color(red: 0.33, green: 0.39, blue: 0.96)
+
     /// Soft wash laid over the material so the panel reads as Pastely, not as a system sheet.
     static var wash: some View {
         LinearGradient(colors: [accent.opacity(0.14), accent.opacity(0.03), .clear],
