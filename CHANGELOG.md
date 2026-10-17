@@ -4,6 +4,20 @@ Each version has a section. The release workflow reads the section matching the 
 
 ## Unreleased
 
+## 0.1.1
+
+Menu bar polish, a hover preview, and a way to report problems from inside the app.
+
+- Hover a row in the menu bar menu to see a preview card: the full image, or the text of a clip, with its source app and age.
+- Menu rows paste straight into the app you were in. Option-click a row to open it in the history panel.
+- Image rows in the menu are titled by the text recognized in them, skipping fragments, instead of "Image (27 KB)".
+- Report a Problem, in Settings, About: describe what happened and send it with a visible diagnostics block. Nothing from your clipboard is included, and your email, if you give one, stays private.
+- Settings restyled to match the rest of the app, with chip tabs, and tall enough that nothing scrolls.
+- The history panel warns in its footer when the Accessibility permission is missing, since pasting needs it.
+- Double-click pastes reliably, including on rows that were not selected yet.
+- Windows opened from the menu bar now come to the front.
+- Dev builds show an indigo menu bar icon and use their own bundle id, so they never collide with the installed app.
+
 ## 0.1.0
 
 The first release of Pastely, a light, local-only clipboard manager for macOS.
