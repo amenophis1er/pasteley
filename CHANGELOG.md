@@ -4,6 +4,14 @@ Each version has a section. The release workflow reads the section matching the 
 
 ## Unreleased
 
+## 0.1.2
+
+Images paste into terminals the way Claude Code and Codex expect.
+
+- An image pasted into Terminal, iTerm, Ghostty, Warp, kitty, Alacritty or WezTerm is sent with ⌃V, which is how Claude Code, Codex and similar tools take images. Text still pastes with ⌘V. The list lives in Settings › General › Terminals; add VS Code or Cursor there if you want the same in their integrated terminal.
+- ⌃↩ in the history panel, or "Paste with ⌃V" in a row's menu, forces ⌃V for any item in any app.
+- A second copy of Pastely quits itself if one is already running.
+
 ## 0.1.1
 
 Menu bar polish, a hover preview, and a way to report problems from inside the app.
