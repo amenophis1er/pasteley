@@ -26,10 +26,11 @@ final class AppSettings {
     var showFirstUseTip: Bool { didSet { defaults.set(showFirstUseTip, forKey: "showFirstUseTip") } }
 
     static let defaultIgnoredApps = ["com.apple.keychainaccess", "com.apple.Passwords"]
+    /// Pure terminals only. Editors with an integrated terminal (VS Code, Cursor, Windsurf) also
+    /// have chat inputs that take images with ⌘V, so they are left for the user to add.
     static let defaultTerminalApps = [
         "com.apple.Terminal", "com.googlecode.iterm2", "com.mitchellh.ghostty", "dev.warp.Warp-Stable",
         "net.kovidgoyal.kitty", "org.alacritty", "com.github.wez.wezterm",
-        "com.microsoft.VSCode", "com.todesktop.230313mzl4w4u92", "com.exafunction.windsurf",
     ]
 
     private init() {

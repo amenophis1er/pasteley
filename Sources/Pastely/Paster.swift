@@ -68,7 +68,7 @@ final class Paster {
         // what is missing, so no system prompt is forced here.
         guard Self.isTrusted() else { return }
         let settings = AppSettings.shared
-        let key = Self.pasteKey(kind: asPlainText ? .text : item.kind,
+        let key = Self.pasteKey(kind: Self.pastedKind(of: item.kind, hasText: item.ocrText != nil, asPlainText: asPlainText),
                                 target: previousApp?.bundleIdentifier,
                                 terminals: settings.terminalImagePaste ? settings.terminalApps : [],
                                 forceControl: forceControl)
@@ -77,6 +77,13 @@ final class Paster {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             Self.sendV(key)
         }
+    }
+
+    /// What `copy` actually put on the pasteboard: a plain-text paste of an image with no
+    /// recognized text falls back to the PNG, so it must still be routed as an image.
+    nonisolated static func pastedKind(of kind: ClipKind, hasText: Bool, asPlainText: Bool) -> ClipKind {
+        guard asPlainText else { return kind }
+        return kind == .image && !hasText ? .image : .text
     }
 
     /// Images going into a known terminal are pasted with ⌃V; everything else keeps ⌘V,

@@ -19,6 +19,13 @@ struct PasteKeyTests {
         #expect(Paster.pasteKey(kind: .image, target: "com.apple.Terminal", terminals: [], forceControl: false) == .commandV)
     }
 
+    @Test func plainTextPasteOfImageWithoutTextStaysAnImage() {
+        #expect(Paster.pastedKind(of: .image, hasText: false, asPlainText: true) == .image)
+        #expect(Paster.pastedKind(of: .image, hasText: true, asPlainText: true) == .text)
+        #expect(Paster.pastedKind(of: .rtf, hasText: false, asPlainText: true) == .text)
+        #expect(Paster.pastedKind(of: .image, hasText: false, asPlainText: false) == .image)
+    }
+
     @Test func holdingControlForcesControlV() {
         #expect(Paster.pasteKey(kind: .text, target: "com.apple.Safari", terminals: [], forceControl: true) == .controlV)
     }
