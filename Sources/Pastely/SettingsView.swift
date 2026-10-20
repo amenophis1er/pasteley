@@ -93,7 +93,7 @@ struct GeneralSettings: View {
             } header: {
                 Text("Terminals")
             } footer: {
-                Text("Claude Code, Codex and similar tools take images with ⌃V. Text still pastes with ⌘V. Hold ⌃ on Return or a double-click to force ⌃V anywhere.")
+                Text("Claude Code, Codex and similar tools take images with ⌃V. Text still pastes with ⌘V. Hold ⌃ on Return, or right-click a row, to force ⌃V anywhere.")
                     .font(Theme.Text.caption).foregroundStyle(.secondary)
             }
             Section("Updates") {

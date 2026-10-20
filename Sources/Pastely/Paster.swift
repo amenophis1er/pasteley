@@ -61,7 +61,7 @@ final class Paster {
         return true
     }
 
-    /// `forceControl` is the user holding ⌃ on Return or the double-click.
+    /// `forceControl` is ⌃ held on Return, or the row's "Paste with ⌃V" menu item.
     func paste(_ item: ClipItem, asPlainText: Bool = false, forceControl: Bool = false) {
         guard copy(item, asPlainText: asPlainText) else { return }
         // Without the permission the item is on the pasteboard; the panel footer explains
