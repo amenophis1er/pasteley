@@ -153,7 +153,7 @@ final class HistoryViewModel {
         let now = Date()
         if let last = lastClick, last.id == id, now.timeIntervalSince(last.at) <= NSEvent.doubleClickInterval {
             lastClick = nil
-            choose(control: NSEvent.modifierFlags.contains(.control))
+            choose()
         } else {
             lastClick = (id, now)
         }
@@ -387,6 +387,7 @@ struct HistoryView: View {
                                         if item.ocrText != nil {
                                             Button("Paste recognized text") { model.selection = item.id; model.choose(plain: true) }
                                         }
+                                        Button("Paste with ⌃V") { model.selection = item.id; model.choose(control: true) }
                                     } else {
                                         Button("Paste as plain text") { model.selection = item.id; model.choose(plain: true) }
                                     }
