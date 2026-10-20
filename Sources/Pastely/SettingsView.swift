@@ -85,6 +85,17 @@ struct GeneralSettings: View {
                 Text("Needed to paste into the front app after you pick an item. Without it, Pastely copies the item and you paste with ⌘V.")
                     .font(Theme.Text.caption).foregroundStyle(.secondary)
             }
+            Section {
+                Toggle("Paste images into terminals with ⌃V", isOn: $settings.terminalImagePaste)
+                if settings.terminalImagePaste {
+                    AppListEditor(apps: $settings.terminalApps)
+                }
+            } header: {
+                Text("Terminals")
+            } footer: {
+                Text("Claude Code, Codex and similar tools take images with ⌃V. Text still pastes with ⌘V. Hold ⌃ on Return or a double-click to force ⌃V anywhere.")
+                    .font(Theme.Text.caption).foregroundStyle(.secondary)
+            }
             Section("Updates") {
                 if UpdaterManager.shared.isEnabled || Screenshots.isRendering {
                     Toggle("Check for updates automatically", isOn: $autoUpdate)
@@ -169,48 +180,11 @@ struct HistorySettings: View {
 
 struct PrivacySettings: View {
     @Bindable private var settings = AppSettings.shared
-    @State private var selected: String?
 
     var body: some View {
         Form {
             Section {
-                List(selection: $selected) {
-                    ForEach(settings.ignoredApps, id: \.self) { bundleID in
-                        HStack(spacing: Theme.Space.sm) {
-                            if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
-                                Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
-                                    .resizable().frame(width: 18, height: 18)
-                                Text(FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: ""))
-                            } else {
-                                Image(systemName: "app.dashed").frame(width: 18)
-                                Text(bundleID)
-                            }
-                            Spacer()
-                            Text(bundleID).font(Theme.Text.caption).foregroundStyle(.tertiary)
-                        }
-                        .tag(bundleID)
-                    }
-                }
-                .frame(height: 220)
-                HStack {
-                    Menu("Add running app") {
-                        ForEach(runningApps, id: \.bundleIdentifier) { app in
-                            Button(app.localizedName ?? app.bundleIdentifier ?? "?") {
-                                if let id = app.bundleIdentifier, !settings.ignoredApps.contains(id) {
-                                    settings.ignoredApps.append(id)
-                                }
-                            }
-                        }
-                    }
-                    .fixedSize()
-                    Button("Choose…") { chooseApp() }
-                    Spacer()
-                    Button("Remove") {
-                        if let selected { settings.ignoredApps.removeAll { $0 == selected } }
-                        selected = nil
-                    }
-                    .disabled(selected == nil)
-                }
+                AppListEditor(apps: $settings.ignoredApps)
             } header: {
                 Text("Ignored apps")
             } footer: {
@@ -221,6 +195,59 @@ struct PrivacySettings: View {
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
     }
+}
+
+/// A list of bundle identifiers with add/remove controls, shared by the ignore and terminal lists.
+struct AppListEditor: View {
+    @Binding var apps: [String]
+    @State private var selected: String?
+
+    var body: some View {
+        List(selection: $selected) {
+            ForEach(apps, id: \.self) { bundleID in
+                HStack(spacing: Theme.Space.sm) {
+                    if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
+                        Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                            .resizable().frame(width: 18, height: 18)
+                        Text(FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: ""))
+                    } else {
+                        Image(systemName: "app.dashed").frame(width: 18)
+                        Text(Self.knownNames[bundleID] ?? bundleID)
+                    }
+                    Spacer()
+                    Text(bundleID).font(Theme.Text.caption).foregroundStyle(.tertiary)
+                }
+                .tag(bundleID)
+            }
+        }
+        .frame(height: 220)
+        HStack {
+            Menu("Add running app") {
+                ForEach(runningApps, id: \.bundleIdentifier) { app in
+                    Button(app.localizedName ?? app.bundleIdentifier ?? "?") {
+                        if let id = app.bundleIdentifier, !apps.contains(id) { apps.append(id) }
+                    }
+                }
+            }
+            .fixedSize()
+            Button("Choose…") { chooseApp() }
+            Spacer()
+            Button("Remove") {
+                if let selected { apps.removeAll { $0 == selected } }
+                selected = nil
+            }
+            .disabled(selected == nil)
+        }
+    }
+
+    /// Names for the default entries when the app is not installed.
+    static let knownNames = [
+        "com.apple.Terminal": "Terminal", "com.googlecode.iterm2": "iTerm", "com.mitchellh.ghostty": "Ghostty",
+        "dev.warp.Warp-Stable": "Warp", "net.kovidgoyal.kitty": "kitty", "org.alacritty": "Alacritty",
+        "com.github.wez.wezterm": "WezTerm", "com.microsoft.VSCode": "Visual Studio Code",
+        "com.todesktop.230313mzl4w4u92": "Cursor", "com.exafunction.windsurf": "Windsurf",
+        "com.apple.keychainaccess": "Keychain Access", "com.apple.Passwords": "Passwords",
+    ]
 
     private var runningApps: [NSRunningApplication] {
         NSWorkspace.shared.runningApplications
@@ -233,8 +260,8 @@ struct PrivacySettings: View {
         panel.allowedContentTypes = [.application]
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
         guard panel.runModal() == .OK, let url = panel.url,
-              let id = Bundle(url: url)?.bundleIdentifier, !settings.ignoredApps.contains(id) else { return }
-        settings.ignoredApps.append(id)
+              let id = Bundle(url: url)?.bundleIdentifier, !apps.contains(id) else { return }
+        apps.append(id)
     }
 }
 

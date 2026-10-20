@@ -1,6 +1,12 @@
 import AppKit
 import ApplicationServices
 
+/// Which keystroke delivers the paste. Terminals hand ⌃V to the program inside them,
+/// which is how Claude Code, Codex and friends accept images.
+enum PasteKey: Equatable {
+    case commandV, controlV
+}
+
 /// Writes an item back to the pasteboard and sends Cmd+V to the previously active app.
 @MainActor
 final class Paster {
@@ -55,16 +61,30 @@ final class Paster {
         return true
     }
 
-    func paste(_ item: ClipItem, asPlainText: Bool = false) {
+    /// `forceControl` is the user holding ⌃ on Return or the double-click.
+    func paste(_ item: ClipItem, asPlainText: Bool = false, forceControl: Bool = false) {
         guard copy(item, asPlainText: asPlainText) else { return }
         // Without the permission the item is on the pasteboard; the panel footer explains
         // what is missing, so no system prompt is forced here.
         guard Self.isTrusted() else { return }
+        let settings = AppSettings.shared
+        let key = Self.pasteKey(kind: asPlainText ? .text : item.kind,
+                                target: previousApp?.bundleIdentifier,
+                                terminals: settings.terminalImagePaste ? settings.terminalApps : [],
+                                forceControl: forceControl)
         previousApp?.activate()
         // Give the target app one run loop turn to become key before the keystroke lands.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            Self.sendCommandV()
+            Self.sendV(key)
         }
+    }
+
+    /// Images going into a known terminal are pasted with ⌃V; everything else keeps ⌘V,
+    /// since text pastes fine with ⌘V everywhere and ⌃V in a bare shell does nothing useful.
+    nonisolated static func pasteKey(kind: ClipKind, target: String?, terminals: [String], forceControl: Bool) -> PasteKey {
+        if forceControl { return .controlV }
+        guard kind == .image, let target else { return .commandV }
+        return terminals.contains(target) ? .controlV : .commandV
     }
 
     static func isTrusted() -> Bool { AXIsProcessTrusted() }
@@ -84,13 +104,14 @@ final class Paster {
         return false
     }
 
-    private static func sendCommandV() {
+    private static func sendV(_ key: PasteKey) {
         let source = CGEventSource(stateID: .combinedSessionState)
         let vKey: CGKeyCode = 9
         guard let down = CGEvent(keyboardEventSource: source, virtualKey: vKey, keyDown: true),
               let up = CGEvent(keyboardEventSource: source, virtualKey: vKey, keyDown: false) else { return }
-        down.flags = .maskCommand
-        up.flags = .maskCommand
+        let flags: CGEventFlags = key == .controlV ? .maskControl : .maskCommand
+        down.flags = flags
+        up.flags = flags
         down.post(tap: .cghidEventTap)
         up.post(tap: .cghidEventTap)
     }

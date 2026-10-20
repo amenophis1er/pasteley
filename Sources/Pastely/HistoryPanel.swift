@@ -35,7 +35,7 @@ final class HistoryPanel {
         }
     }
 
-    func show(onSelect: @escaping (ClipItem, Bool) -> Void) {
+    func show(onSelect: @escaping (ClipItem, Bool, Bool) -> Void) {
         model.reset()
         model.onSelect = onSelect
         panel.setFrameOrigin(Self.origin(near: FocusLocator.targetRect()))
@@ -134,7 +134,8 @@ final class HistoryViewModel {
     var query = ""
     var filter: HistoryFilter = .all
     var selection: Int64?
-    var onSelect: ((ClipItem, Bool) -> Void)?
+    /// (item, plain text, force ⌃V)
+    var onSelect: ((ClipItem, Bool, Bool) -> Void)?
     /// Refreshed each time the panel opens; drives the footer warning.
     var canPaste = true
     /// Row to scroll into view. Set by keyboard navigation and programmatic selection,
@@ -152,7 +153,7 @@ final class HistoryViewModel {
         let now = Date()
         if let last = lastClick, last.id == id, now.timeIntervalSince(last.at) <= NSEvent.doubleClickInterval {
             lastClick = nil
-            choose()
+            choose(control: NSEvent.modifierFlags.contains(.control))
         } else {
             lastClick = (id, now)
         }
@@ -209,17 +210,17 @@ final class HistoryViewModel {
         scrollTarget = selection
     }
 
-    func choose(plain: Bool = false) {
+    func choose(plain: Bool = false, control: Bool = false) {
         guard let item = selectedItem else { return }
         tipDone()
-        onSelect?(item, plain)
+        onSelect?(item, plain, control)
     }
 
     func chooseIndex(_ n: Int) {
         let list = results
         guard n >= 1, n <= list.count else { return }
         tipDone()
-        onSelect?(list[n - 1], false)
+        onSelect?(list[n - 1], false, false)
     }
 
     /// Any paste or copy proves the user found the panel; retire the first-use tip.
@@ -331,7 +332,7 @@ struct HistoryView: View {
 
     private func handle(_ press: KeyPress) -> KeyPress.Result {
         if press.key == .return {
-            model.choose(plain: press.modifiers.contains(.shift))
+            model.choose(plain: press.modifiers.contains(.shift), control: press.modifiers.contains(.control))
             return .handled
         }
         guard press.modifiers.contains(.command) else { return .ignored }
@@ -456,6 +457,7 @@ struct HistoryView: View {
         HStack(spacing: Theme.Space.lg) {
             KeyHint(keys: "↩", label: "Paste")
             KeyHint(keys: "⇧↩", label: model.selectedItem?.kind == .image ? "Paste text" : "Plain text")
+            if model.selectedItem?.kind == .image { KeyHint(keys: "⌃↩", label: "Paste as ⌃V") }
             KeyHint(keys: "⌘C", label: "Copy")
             KeyHint(keys: "⌘P", label: "Pin")
             KeyHint(keys: "⌘⌫", label: "Delete")

@@ -102,10 +102,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func openPanel() {
         paster.rememberFrontApp()
-        panel.show { [weak self] item, plain in
+        panel.show { [weak self] item, plain, control in
             guard let self else { return }
             self.panel.hide()
-            self.paster.paste(item, asPlainText: plain)
+            self.paster.paste(item, asPlainText: plain, forceControl: control)
         }
     }
 }

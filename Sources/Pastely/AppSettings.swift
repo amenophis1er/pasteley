@@ -16,6 +16,9 @@ final class AppSettings {
     var maxAgeDays: Int { didSet { defaults.set(maxAgeDays, forKey: "maxAgeDays") } }
     var maxImageMB: Int { didSet { defaults.set(maxImageMB, forKey: "maxImageMB") } }
     var ignoredApps: [String] { didSet { defaults.set(ignoredApps, forKey: "ignoredApps") } }
+    /// Apps whose program (Claude Code, Codex…) takes images with ⌃V instead of ⌘V.
+    var terminalApps: [String] { didSet { defaults.set(terminalApps, forKey: "terminalApps") } }
+    var terminalImagePaste: Bool { didSet { defaults.set(terminalImagePaste, forKey: "terminalImagePaste") } }
     var captureImages: Bool { didSet { defaults.set(captureImages, forKey: "captureImages") } }
     var ocrImages: Bool { didSet { defaults.set(ocrImages, forKey: "ocrImages") } }
     var didOnboard: Bool { didSet { defaults.set(didOnboard, forKey: "didOnboard") } }
@@ -23,6 +26,11 @@ final class AppSettings {
     var showFirstUseTip: Bool { didSet { defaults.set(showFirstUseTip, forKey: "showFirstUseTip") } }
 
     static let defaultIgnoredApps = ["com.apple.keychainaccess", "com.apple.Passwords"]
+    static let defaultTerminalApps = [
+        "com.apple.Terminal", "com.googlecode.iterm2", "com.mitchellh.ghostty", "dev.warp.Warp-Stable",
+        "net.kovidgoyal.kitty", "org.alacritty", "com.github.wez.wezterm",
+        "com.microsoft.VSCode", "com.todesktop.230313mzl4w4u92", "com.exafunction.windsurf",
+    ]
 
     private init() {
         hotkeyKeyCode = UInt32(defaults.object(forKey: "hotkeyKeyCode") as? Int ?? 9) // V
@@ -32,6 +40,8 @@ final class AppSettings {
         maxAgeDays = defaults.object(forKey: "maxAgeDays") as? Int ?? 30
         maxImageMB = defaults.object(forKey: "maxImageMB") as? Int ?? 10
         ignoredApps = defaults.stringArray(forKey: "ignoredApps") ?? Self.defaultIgnoredApps
+        terminalApps = defaults.stringArray(forKey: "terminalApps") ?? Self.defaultTerminalApps
+        terminalImagePaste = defaults.object(forKey: "terminalImagePaste") as? Bool ?? true
         captureImages = defaults.object(forKey: "captureImages") as? Bool ?? true
         ocrImages = defaults.object(forKey: "ocrImages") as? Bool ?? true
         didOnboard = defaults.bool(forKey: "didOnboard")
